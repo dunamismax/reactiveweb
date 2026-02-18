@@ -24,10 +24,23 @@ bun run typecheck
 ## Required Environment
 
 ```bash
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/reactiveweb
+DATABASE_URL=postgres://postgres:postgres@localhost:55432/reactiveweb
 AUTH_SECRET=replace-with-16+-char-secret
 AUTH_DEMO_PASSWORD=replace-with-demo-password
 VITE_DEMO_ADMIN_EMAIL=admin@reactiveweb.dev
+```
+
+Recommended local DB bootstrap:
+
+```bash
+docker rm -f reactiveweb-postgres 2>/dev/null || true
+docker run -d \
+  --name reactiveweb-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=reactiveweb \
+  -p 55432:5432 \
+  postgres:16-alpine
 ```
 
 ## Auth Domain Model

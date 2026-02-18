@@ -36,7 +36,15 @@
 
 ```bash
 bun install
-export DATABASE_URL="postgres://postgres:postgres@localhost:5432/reactiveweb"
+docker rm -f reactiveweb-postgres 2>/dev/null || true
+docker run -d \
+  --name reactiveweb-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=reactiveweb \
+  -p 55432:5432 \
+  postgres:16-alpine
+export DATABASE_URL="postgres://postgres:postgres@localhost:55432/reactiveweb"
 export AUTH_SECRET="replace-with-16+-char-secret"
 export AUTH_DEMO_PASSWORD="replace-with-demo-password"
 export VITE_DEMO_ADMIN_EMAIL="admin@reactiveweb.dev"

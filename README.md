@@ -28,15 +28,22 @@ Monorepo for Stephen's React projects and apps, built on Bun and a shared TypeSc
 
 ```bash
 bun install
-export DATABASE_URL="postgres://postgres:postgres@localhost:5432/reactiveweb"
-export AUTH_SECRET="replace-with-16+-char-secret"
-export AUTH_DEMO_PASSWORD="replace-with-demo-password"
-export VITE_DEMO_ADMIN_EMAIL="admin@reactiveweb.dev"
+docker rm -f reactiveweb-postgres 2>/dev/null || true
+docker run -d \
+  --name reactiveweb-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=reactiveweb \
+  -p 55432:5432 \
+  postgres:16-alpine
+cp .env.example .env
+set -a; source .env; set +a
 bun run demo:bootstrap
 bun run dev
 ```
 
 `AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `web-demo` stores and verifies per-user password hashes in Postgres.
+`55432` avoids collisions with existing local Postgres services bound to `5432`.
 
 ## Workspace Commands
 
