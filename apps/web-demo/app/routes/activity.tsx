@@ -1,6 +1,6 @@
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
 import { Avatar } from "~/components/avatar";
-import { Badge } from "~/components/badge";
+import { actionBadgeVariant, Badge } from "~/components/badge";
 import { EmptyState } from "~/components/empty-state";
 import { SectionHeader } from "~/components/section-header";
 import { Skeleton } from "~/components/skeleton";
@@ -18,17 +18,6 @@ function formatActivityTime(iso: string) {
 }
 
 const ACTION_FILTERS = ["All", "Created", "Updated", "Activated", "Suspended"] as const;
-
-type ActionBadgeVariant = "default" | "active" | "suspended" | "editor" | "admin";
-
-function actionBadgeVariant(action: string): ActionBadgeVariant {
-  const lower = action.toLowerCase();
-  if (lower === "created") return "admin";
-  if (lower === "updated") return "editor";
-  if (lower === "activated") return "active";
-  if (lower === "suspended") return "suspended";
-  return "default";
-}
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuthSession(request);

@@ -12,6 +12,7 @@ import {
   mapDbUserToDemoUser,
   requireAuthSession,
 } from "~/lib/demo-state.server";
+import { roleProgressBarClass } from "~/lib/semantic-styles";
 import type { Route } from "./+types/dashboard";
 
 function asPercent(numerator: number, denominator: number) {
@@ -123,12 +124,6 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
           <div className="mt-4 grid gap-3">
             {Object.entries(roleCounts).map(([role, count]) => {
               const width = asPercent(count, users.length);
-              const barColors: Record<string, string> = {
-                owner: "bg-[var(--role-owner-fg)]",
-                admin: "bg-[var(--role-admin-fg)]",
-                editor: "bg-[var(--role-editor-fg)]",
-                viewer: "bg-[var(--role-viewer-fg)]",
-              };
               return (
                 <div key={role}>
                   <div className="mb-1 flex items-center justify-between text-sm">
@@ -137,7 +132,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div className="h-2 rounded-full bg-[var(--track)]">
                     <div
-                      className={`progress-fill h-2 rounded-full ${barColors[role] ?? "bg-[var(--accent)]"}`}
+                      className={`progress-fill h-2 rounded-full ${roleProgressBarClass(role)}`}
                       style={{ width: `${Math.max(width, count ? 10 : 0)}%` }}
                     />
                   </div>

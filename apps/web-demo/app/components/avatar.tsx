@@ -1,3 +1,5 @@
+import { avatarPaletteClasses } from "~/lib/semantic-styles";
+
 type AvatarSize = "sm" | "md" | "lg";
 
 type AvatarProps = {
@@ -6,22 +8,12 @@ type AvatarProps = {
   className?: string;
 };
 
-const PALETTE = [
-  "bg-[var(--role-admin-bg)] border-[var(--role-admin-border)] text-[var(--role-admin-fg)]",
-  "bg-[var(--tone-success-bg)] border-[var(--tone-success-border)] text-[var(--tone-success-fg)]",
-  "bg-[var(--role-owner-bg)] border-[var(--role-owner-border)] text-[var(--role-owner-fg)]",
-  "bg-[var(--tone-secondary-bg)] border-[var(--tone-secondary-border)] text-[var(--tone-secondary-fg)]",
-  "bg-[var(--role-editor-bg)] border-[var(--role-editor-border)] text-[var(--role-editor-fg)]",
-  "bg-[var(--tone-error-bg)] border-[var(--tone-error-border)] text-[var(--tone-error-fg)]",
-  "bg-[var(--role-viewer-bg)] border-[var(--role-viewer-border)] text-[var(--foreground)]",
-] as const;
-
 function hashName(name: string): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) {
     h = ((h * 31 + name.charCodeAt(i)) | 0) >>> 0;
   }
-  return h % PALETTE.length;
+  return h % avatarPaletteClasses.length;
 }
 
 function getInitials(name: string): string {
@@ -38,7 +30,7 @@ const sizeClasses: Record<AvatarSize, string> = {
 };
 
 export function Avatar({ name, size = "md", className = "" }: AvatarProps) {
-  const colorClass = PALETTE[hashName(name)];
+  const colorClass = avatarPaletteClasses[hashName(name)];
   const initials = getInitials(name);
 
   return (

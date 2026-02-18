@@ -18,13 +18,21 @@
   --surface: #3d375e;
   --border: #3d375e;
   --foreground: var(--accent7);
-  --muted: var(--accent8);
-  --accent: var(--accent1);
+  --muted: color-mix(in srgb, var(--accent7) 72%, var(--accent8) 28%);
+  --accent: color-mix(in srgb, var(--accent1) 80%, var(--accent7) 20%);
   --accent-foreground: var(--accent12);
   --overlay-soft: #3d375e3d;
   --overlay: #3d375e66;
   --overlay-strong: #15141be0;
   --track: #3d375e80;
+  --focus-ring: var(--accent32);
+
+  --action-primary-bg: var(--accent);
+  --action-primary-fg: var(--accent-foreground);
+  --action-primary-hover-bg: color-mix(in srgb, var(--accent) 86%, var(--accent32) 14%);
+  --action-outline-border: var(--border);
+  --action-outline-hover-bg: var(--overlay-soft);
+  --action-ghost-hover-bg: var(--overlay-soft);
 
   --tone-success-bg: #54c59f26;
   --tone-success-border: #54c59f66;
@@ -34,7 +42,7 @@
   --tone-warning-fg: #c7a06f;
   --tone-error-bg: #c5585826;
   --tone-error-border: #c5585866;
-  --tone-error-fg: #c55858;
+  --tone-error-fg: color-mix(in srgb, var(--accent5) 80%, var(--accent7) 20%);
   --tone-info-bg: #6cb2c726;
   --tone-info-border: #6cb2c766;
   --tone-info-fg: #6cb2c7;
@@ -47,13 +55,13 @@
   --role-owner-fg: #c7a06f;
   --role-admin-bg: #8464c61f;
   --role-admin-border: #8464c666;
-  --role-admin-fg: #8464c6;
+  --role-admin-fg: var(--accent);
   --role-editor-bg: #6cb2c71f;
   --role-editor-border: #6cb2c766;
   --role-editor-fg: #6cb2c7;
   --role-viewer-bg: #3d375e7f;
-  --role-viewer-border: #6d6d6d66;
-  --role-viewer-fg: #6d6d6d;
+  --role-viewer-border: color-mix(in srgb, var(--accent8) 68%, var(--accent7) 32%);
+  --role-viewer-fg: var(--muted);
 }
 
 * {

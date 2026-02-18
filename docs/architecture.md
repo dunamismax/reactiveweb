@@ -16,6 +16,14 @@
 - Validation uses Zod at trust boundaries (env + form/action payloads).
 - Database access composes through Drizzle schema modules.
 
+## Visual Theme Contract
+
+- Canonical palette source is `COLOR_PALETTE.md`.
+- UI baseline is `Main` > `Dark Soft` across repo apps.
+- Use semantic CSS variables for surface/interactive/tone/role styling in `apps/web-demo/app/app.css`.
+- Keep component class mappings centralized in `apps/web-demo/app/lib/semantic-styles.ts` to avoid route-level color drift.
+- Shared `@reactiveweb/ui` components should consume semantic CSS variables first, with palette-aligned fallbacks.
+
 ## Delivery Rules
 
 - Keep changes narrow and reviewable.

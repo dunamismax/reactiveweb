@@ -1,17 +1,12 @@
 import type { ReactNode } from "react";
+import { type StatTone, statToneClasses } from "~/lib/semantic-styles";
 
 type StatCardProps = {
   label: string;
   value: string;
   trend: string;
-  tone?: "default" | "good" | "warn";
+  tone?: StatTone;
   icon?: ReactNode;
-};
-
-const toneClasses = {
-  default: "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)]",
-  good: "bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)] border-[var(--tone-success-border)]",
-  warn: "bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)] border-[var(--tone-error-border)]",
 };
 
 export function StatCard({ label, value, trend, tone = "default", icon }: StatCardProps) {
@@ -24,7 +19,7 @@ export function StatCard({ label, value, trend, tone = "default", icon }: StatCa
         </div>
         {icon ? (
           <div
-            className={`inline-flex size-9 items-center justify-center rounded-lg border ${toneClasses[tone]}`}
+            className={`inline-flex size-9 items-center justify-center rounded-lg border ${statToneClasses[tone]}`}
           >
             {icon}
           </div>

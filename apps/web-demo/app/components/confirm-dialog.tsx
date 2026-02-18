@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-
-type ConfirmTone = "danger" | "warning" | "default";
+import { type ConfirmTone, confirmToneClasses } from "~/lib/semantic-styles";
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -11,15 +10,6 @@ type ConfirmDialogProps = {
   tone?: ConfirmTone;
   onConfirm: () => void;
   onCancel: () => void;
-};
-
-const toneClasses: Record<ConfirmTone, string> = {
-  danger:
-    "border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)] hover:opacity-90",
-  warning:
-    "border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] text-[var(--tone-warning-fg)] hover:opacity-90",
-  default:
-    "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-90",
 };
 
 export function ConfirmDialog({
@@ -102,7 +92,7 @@ export function ConfirmDialog({
           </button>
           <button
             ref={confirmBtnRef}
-            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${toneClasses[tone]}`}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${confirmToneClasses[tone]}`}
             onClick={onConfirm}
             type="button"
           >

@@ -9,7 +9,12 @@ import { useEffect, useState } from "react";
 import { Link, useNavigation, useSubmit } from "react-router";
 import { z } from "zod";
 import { Avatar } from "~/components/avatar";
-import { Badge, roleBadgeVariant, statusBadgeVariant } from "~/components/badge";
+import {
+  actionBadgeVariant,
+  Badge,
+  roleBadgeVariant,
+  statusBadgeVariant,
+} from "~/components/badge";
 import { ConfirmDialog } from "~/components/confirm-dialog";
 import { SectionHeader } from "~/components/section-header";
 import { useToast } from "~/components/toast";
@@ -186,18 +191,6 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
     setPendingAction(null);
   }
 
-  const actionBadgeColors: Record<string, string> = {
-    created:
-      "border-[var(--role-admin-border)] bg-[var(--role-admin-bg)] text-[var(--role-admin-fg)]",
-    updated:
-      "border-[var(--role-editor-border)] bg-[var(--role-editor-bg)] text-[var(--role-editor-fg)]",
-    activated:
-      "border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)]",
-    suspended:
-      "border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)]",
-    seeded: "border-[var(--border)] bg-[var(--overlay-soft)] text-[var(--muted)]",
-  };
-
   return (
     <section>
       <div className="flex items-center gap-2 border-b border-[var(--border)] pb-4">
@@ -291,14 +284,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
                   <div className="flex items-center gap-2">
                     <Avatar name={event.actor} size="sm" />
                     <span className="text-sm font-medium">{event.actor}</span>
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${
-                        actionBadgeColors[event.action.toLowerCase()] ??
-                        "border-[var(--border)] bg-[var(--overlay-soft)] text-[var(--muted)]"
-                      }`}
-                    >
-                      {event.action}
-                    </span>
+                    <Badge variant={actionBadgeVariant(event.action)}>{event.action}</Badge>
                   </div>
                   <time className="shrink-0 text-xs text-[var(--muted)]">
                     {formatTime(event.createdAt)}

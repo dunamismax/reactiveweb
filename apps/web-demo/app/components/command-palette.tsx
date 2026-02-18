@@ -137,7 +137,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               >
                 <span>{cmd.label}</span>
                 <span
-                  className={`text-xs ${i === activeIndex ? "text-[var(--accent-foreground)]/70" : "text-[var(--muted)]"}`}
+                  className={`text-xs ${i === activeIndex ? "text-[var(--accent-foreground)]/85" : "text-[var(--muted)]"}`}
                 >
                   {cmd.group}
                 </span>

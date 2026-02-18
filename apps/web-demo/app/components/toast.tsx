@@ -7,8 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { type ToastVariant, toastVariantClasses } from "~/lib/semantic-styles";
 
-export type ToastVariant = "success" | "error" | "warning" | "info";
+export type { ToastVariant } from "~/lib/semantic-styles";
 
 interface ToastData {
   id: string;
@@ -26,31 +27,8 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 const DISMISS_MS = 4000;
 const EXIT_MS = 200;
 
-const variantConfig: Record<ToastVariant, { container: string; bar: string }> = {
-  success: {
-    container:
-      "bg-[var(--tone-success-bg)] border-[var(--tone-success-border)] text-[var(--tone-success-fg)]",
-    bar: "bg-[var(--tone-success-fg)]",
-  },
-  error: {
-    container:
-      "bg-[var(--tone-error-bg)] border-[var(--tone-error-border)] text-[var(--tone-error-fg)]",
-    bar: "bg-[var(--tone-error-fg)]",
-  },
-  warning: {
-    container:
-      "bg-[var(--tone-warning-bg)] border-[var(--tone-warning-border)] text-[var(--tone-warning-fg)]",
-    bar: "bg-[var(--tone-warning-fg)]",
-  },
-  info: {
-    container:
-      "bg-[var(--tone-info-bg)] border-[var(--tone-info-border)] text-[var(--tone-info-fg)]",
-    bar: "bg-[var(--tone-info-fg)]",
-  },
-};
-
 function ToastItem({ toast, onDismiss }: { toast: ToastData; onDismiss: () => void }) {
-  const cfg = variantConfig[toast.variant];
+  const cfg = toastVariantClasses[toast.variant];
 
   return (
     <div
@@ -64,7 +42,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastData; onDismiss: () => vo
         <p className="text-sm leading-relaxed">{toast.message}</p>
         <button
           aria-label="Dismiss"
-          className="shrink-0 opacity-60 transition-opacity hover:opacity-100"
+          className="shrink-0 rounded-md p-0.5 opacity-80 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           onClick={onDismiss}
           type="button"
         >

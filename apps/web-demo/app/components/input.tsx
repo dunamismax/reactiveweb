@@ -11,11 +11,11 @@ export function InputField({ label, error, id, ...props }: InputFieldProps) {
     <label className="grid gap-1 text-sm" htmlFor={inputId}>
       <span className="text-[var(--muted)]">{label}</span>
       <input
-        className="rounded-lg border border-[var(--border)] bg-[var(--overlay)] px-3 py-2 outline-none transition-colors focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]"
+        className="rounded-lg border border-[var(--border)] bg-[var(--overlay)] px-3 py-2 outline-none transition-colors focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--focus-ring)]"
         id={inputId}
         {...props}
       />
-      {error ? <span className="text-xs text-[var(--tone-warn-fg)]">{error}</span> : null}
+      {error ? <span className="text-xs text-[var(--tone-warning-fg)]">{error}</span> : null}
     </label>
   );
 }
