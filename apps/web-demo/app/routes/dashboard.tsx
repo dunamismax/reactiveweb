@@ -124,10 +124,10 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
             {Object.entries(roleCounts).map(([role, count]) => {
               const width = asPercent(count, users.length);
               const barColors: Record<string, string> = {
-                owner: "bg-amber-400",
-                admin: "bg-violet-400",
-                editor: "bg-sky-400",
-                viewer: "bg-[var(--muted)]",
+                owner: "bg-[var(--role-owner-fg)]",
+                admin: "bg-[var(--role-admin-fg)]",
+                editor: "bg-[var(--role-editor-fg)]",
+                viewer: "bg-[var(--role-viewer-fg)]",
               };
               return (
                 <div key={role}>

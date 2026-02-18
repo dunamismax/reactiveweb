@@ -187,10 +187,14 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
   }
 
   const actionBadgeColors: Record<string, string> = {
-    created: "border-violet-500/40 bg-violet-500/10 text-violet-300",
-    updated: "border-sky-500/40 bg-sky-500/10 text-sky-300",
-    activated: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-    suspended: "border-rose-500/40 bg-rose-500/10 text-rose-300",
+    created:
+      "border-[var(--role-admin-border)] bg-[var(--role-admin-bg)] text-[var(--role-admin-fg)]",
+    updated:
+      "border-[var(--role-editor-border)] bg-[var(--role-editor-bg)] text-[var(--role-editor-fg)]",
+    activated:
+      "border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)]",
+    suspended:
+      "border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)]",
     seeded: "border-[var(--border)] bg-[var(--overlay-soft)] text-[var(--muted)]",
   };
 
@@ -253,8 +257,8 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
             <button
               className={`nav-transition rounded-lg border px-3 py-1.5 text-sm disabled:opacity-40 ${
                 user.status === "active"
-                  ? "border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
-                  : "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10"
+                  ? "border-[var(--tone-error-border)] text-[var(--tone-error-fg)] hover:bg-[var(--tone-error-bg)]"
+                  : "border-[var(--tone-success-border)] text-[var(--tone-success-fg)] hover:bg-[var(--tone-success-bg)]"
               }`}
               disabled={isSubmitting}
               onClick={() => requestAction("toggleStatus")}

@@ -14,8 +14,10 @@ type ConfirmDialogProps = {
 };
 
 const toneClasses: Record<ConfirmTone, string> = {
-  danger: "border-rose-500/40 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30",
-  warning: "border-amber-500/40 bg-amber-500/20 text-amber-200 hover:bg-amber-500/30",
+  danger:
+    "border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)] hover:opacity-90",
+  warning:
+    "border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] text-[var(--tone-warning-fg)] hover:opacity-90",
   default:
     "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-90",
 };

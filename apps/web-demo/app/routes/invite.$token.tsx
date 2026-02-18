@@ -152,7 +152,7 @@ export default function InviteTokenRoute({ actionData, loaderData }: Route.Compo
       />
 
       {!loaderData.valid ? (
-        <div className="mt-5 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+        <div className="mt-5 rounded-xl border border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] p-4 text-sm text-[var(--tone-error-fg)]">
           <p>{loaderData.error}</p>
           <Link className="mt-3 inline-block text-[var(--accent)] hover:underline" to="/auth">
             Back to sign-in
@@ -191,7 +191,7 @@ export default function InviteTokenRoute({ actionData, loaderData }: Route.Compo
           </Form>
 
           {actionData && "ok" in actionData && actionData.ok ? (
-            <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            <div className="mt-4 rounded-xl border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] p-4 text-sm text-[var(--tone-success-fg)]">
               <p>{actionData.message}</p>
               <Link className="mt-2 inline-block text-[var(--accent)] hover:underline" to="/auth">
                 Continue to sign-in
@@ -200,7 +200,7 @@ export default function InviteTokenRoute({ actionData, loaderData }: Route.Compo
           ) : null}
 
           {actionData && "error" in actionData ? (
-            <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+            <div className="mt-4 rounded-xl border border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] p-4 text-sm text-[var(--tone-error-fg)]">
               {actionData.error.message}
             </div>
           ) : null}

@@ -28,20 +28,24 @@ const EXIT_MS = 200;
 
 const variantConfig: Record<ToastVariant, { container: string; bar: string }> = {
   success: {
-    container: "bg-emerald-500/15 border-emerald-500/40 text-emerald-200",
-    bar: "bg-emerald-400",
+    container:
+      "bg-[var(--tone-success-bg)] border-[var(--tone-success-border)] text-[var(--tone-success-fg)]",
+    bar: "bg-[var(--tone-success-fg)]",
   },
   error: {
-    container: "bg-rose-500/15 border-rose-500/40 text-rose-200",
-    bar: "bg-rose-400",
+    container:
+      "bg-[var(--tone-error-bg)] border-[var(--tone-error-border)] text-[var(--tone-error-fg)]",
+    bar: "bg-[var(--tone-error-fg)]",
   },
   warning: {
-    container: "bg-amber-500/15 border-amber-500/40 text-amber-200",
-    bar: "bg-amber-400",
+    container:
+      "bg-[var(--tone-warning-bg)] border-[var(--tone-warning-border)] text-[var(--tone-warning-fg)]",
+    bar: "bg-[var(--tone-warning-fg)]",
   },
   info: {
-    container: "bg-sky-500/15 border-sky-500/40 text-sky-200",
-    bar: "bg-sky-400",
+    container:
+      "bg-[var(--tone-info-bg)] border-[var(--tone-info-border)] text-[var(--tone-info-fg)]",
+    bar: "bg-[var(--tone-info-fg)]",
   },
 };
 

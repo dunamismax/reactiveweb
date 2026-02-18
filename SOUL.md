@@ -47,6 +47,7 @@ Build a durable, scalable React monorepo where many production apps can coexist 
 - Keep route/app code readable under pressure.
 - Name things for maintainability, not cleverness.
 - Favor explicit data flow and typed boundaries.
+- Visual identity baseline is `Main` > `Dark Soft` from `COLOR_PALETTE.md`; keep UI colors aligned to semantic tokens from this palette.
 - For UI/product work, optimize for live iteration: persistent dev server, rapid diffs, immediate browser review.
 - Optimize for confidence: lint, typecheck, build before calling work done.
 

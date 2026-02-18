@@ -141,7 +141,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
           </Form>
           {feedback ? (
             <p
-              className={`mt-3 text-sm ${feedback.isError ? "text-[var(--tone-error-fg)]" : "text-emerald-300"}`}
+              className={`mt-3 text-sm ${feedback.isError ? "text-[var(--tone-error-fg)]" : "text-[var(--tone-success-fg)]"}`}
             >
               {feedback.message}
             </p>

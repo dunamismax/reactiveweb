@@ -7,14 +7,13 @@ type AvatarProps = {
 };
 
 const PALETTE = [
-  "bg-violet-500/20 border-violet-500/40 text-violet-300",
-  "bg-sky-500/20 border-sky-500/40 text-sky-300",
-  "bg-emerald-500/20 border-emerald-500/40 text-emerald-300",
-  "bg-amber-500/20 border-amber-500/40 text-amber-300",
-  "bg-rose-500/20 border-rose-500/40 text-rose-300",
-  "bg-pink-500/20 border-pink-500/40 text-pink-300",
-  "bg-indigo-500/20 border-indigo-500/40 text-indigo-300",
-  "bg-teal-500/20 border-teal-500/40 text-teal-300",
+  "bg-[var(--role-admin-bg)] border-[var(--role-admin-border)] text-[var(--role-admin-fg)]",
+  "bg-[var(--tone-success-bg)] border-[var(--tone-success-border)] text-[var(--tone-success-fg)]",
+  "bg-[var(--role-owner-bg)] border-[var(--role-owner-border)] text-[var(--role-owner-fg)]",
+  "bg-[var(--tone-secondary-bg)] border-[var(--tone-secondary-border)] text-[var(--tone-secondary-fg)]",
+  "bg-[var(--role-editor-bg)] border-[var(--role-editor-border)] text-[var(--role-editor-fg)]",
+  "bg-[var(--tone-error-bg)] border-[var(--tone-error-border)] text-[var(--tone-error-fg)]",
+  "bg-[var(--role-viewer-bg)] border-[var(--role-viewer-border)] text-[var(--foreground)]",
 ] as const;
 
 function hashName(name: string): number {

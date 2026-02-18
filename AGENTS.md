@@ -42,6 +42,12 @@ Do not deviate from this stack unless Stephen explicitly approves:
 - No ESLint/Prettier migration unless explicitly requested.
 - No SSR-by-default app setup in this repo.
 
+## Visual Palette Contract (Strict)
+
+- Canonical palette file: `COLOR_PALETTE.md`.
+- Theme direction: `Main` > `Dark Soft` is the required visual baseline for all repo UI work.
+- Map UI to semantic tokens derived from this palette; do not introduce ad-hoc palettes without explicit approval from Stephen.
+
 ---
 
 ## Repository Layout

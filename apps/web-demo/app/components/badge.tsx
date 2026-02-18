@@ -4,12 +4,16 @@ type BadgeVariant = "default" | "owner" | "admin" | "editor" | "viewer" | "activ
 
 const variantClasses: Record<BadgeVariant, string> = {
   default: "border-[var(--border)] text-[var(--foreground)]",
-  owner: "border-amber-500/40 bg-amber-500/10 text-amber-300",
-  admin: "border-violet-500/40 bg-violet-500/10 text-violet-300",
-  editor: "border-sky-500/40 bg-sky-500/10 text-sky-300",
-  viewer: "border-[var(--border)] bg-[var(--overlay-soft)] text-[var(--muted)]",
-  active: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  suspended: "border-rose-500/40 bg-rose-500/10 text-rose-300",
+  owner: "border-[var(--role-owner-border)] bg-[var(--role-owner-bg)] text-[var(--role-owner-fg)]",
+  admin: "border-[var(--role-admin-border)] bg-[var(--role-admin-bg)] text-[var(--role-admin-fg)]",
+  editor:
+    "border-[var(--role-editor-border)] bg-[var(--role-editor-bg)] text-[var(--role-editor-fg)]",
+  viewer:
+    "border-[var(--role-viewer-border)] bg-[var(--role-viewer-bg)] text-[var(--role-viewer-fg)]",
+  active:
+    "border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)]",
+  suspended:
+    "border-[var(--tone-error-border)] bg-[var(--tone-error-bg)] text-[var(--tone-error-fg)]",
 };
 
 type BadgeProps = {

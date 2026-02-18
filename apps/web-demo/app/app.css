@@ -1,24 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --background: #101820;
-  --panel: #17222c;
-  --surface: #22303d;
-  --border: #7f8a8f;
-  --foreground: #f2e8cf;
-  --muted: #d3c7ab;
-  --accent: #d97d54;
-  --accent-foreground: #101820;
-  --overlay-soft: #1018203d;
-  --overlay: #10182059;
-  --overlay-strong: #10182080;
-  --track: #22303d80;
-  --tone-good-bg: #f2e8cf33;
-  --tone-good-fg: #f2e8cf;
-  --tone-warn-bg: #d97d5440;
-  --tone-warn-fg: #ffe7da;
-  --tone-error-bg: #e5484d20;
-  --tone-error-fg: #ff9592;
+  --accent1: #8464c6;
+  --accent20: #3d375e7f;
+  --accent38: #29263c;
+  --accent2: #54c59f;
+  --accent3: #c7a06f;
+  --accent6: #c17ac8;
+  --accent32: #6cb2c7;
+  --accent5: #c55858;
+  --accent7: #bdbdbd;
+  --accent8: #6d6d6d;
+  --accent12: #15141b;
+
+  --background: var(--accent12);
+  --panel: var(--accent38);
+  --surface: #3d375e;
+  --border: #3d375e;
+  --foreground: var(--accent7);
+  --muted: var(--accent8);
+  --accent: var(--accent1);
+  --accent-foreground: var(--accent12);
+  --overlay-soft: #3d375e3d;
+  --overlay: #3d375e66;
+  --overlay-strong: #15141be0;
+  --track: #3d375e80;
+
+  --tone-success-bg: #54c59f26;
+  --tone-success-border: #54c59f66;
+  --tone-success-fg: #54c59f;
+  --tone-warning-bg: #c7a06f26;
+  --tone-warning-border: #c7a06f66;
+  --tone-warning-fg: #c7a06f;
+  --tone-error-bg: #c5585826;
+  --tone-error-border: #c5585866;
+  --tone-error-fg: #c55858;
+  --tone-info-bg: #6cb2c726;
+  --tone-info-border: #6cb2c766;
+  --tone-info-fg: #6cb2c7;
+  --tone-secondary-bg: #c17ac826;
+  --tone-secondary-border: #c17ac866;
+  --tone-secondary-fg: #c17ac8;
+
+  --role-owner-bg: #c7a06f1f;
+  --role-owner-border: #c7a06f66;
+  --role-owner-fg: #c7a06f;
+  --role-admin-bg: #8464c61f;
+  --role-admin-border: #8464c666;
+  --role-admin-fg: #8464c6;
+  --role-editor-bg: #6cb2c71f;
+  --role-editor-border: #6cb2c766;
+  --role-editor-fg: #6cb2c7;
+  --role-viewer-bg: #3d375e7f;
+  --role-viewer-border: #6d6d6d66;
+  --role-viewer-fg: #6d6d6d;
 }
 
 * {
@@ -34,9 +69,10 @@ body {
   margin: 0;
   color: var(--foreground);
   background:
-    radial-gradient(circle at 18% 8%, #22303d 0%, transparent 42%),
-    radial-gradient(circle at 85% 10%, #d97d5430 0%, transparent 36%),
-    linear-gradient(160deg, #101820 0%, #17222c 55%, #101820 100%);
+    radial-gradient(circle at 18% 8%, #3d375e 0%, transparent 44%),
+    radial-gradient(circle at 85% 10%, #8464c640 0%, transparent 36%),
+    radial-gradient(circle at 45% 88%, #54c59f22 0%, transparent 34%),
+    linear-gradient(160deg, #15141b 0%, #29263c 55%, #15141b 100%);
   font-family: "Space Grotesk", "Manrope", "Avenir Next", "Segoe UI", sans-serif;
 }
 
