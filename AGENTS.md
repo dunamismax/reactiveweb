@@ -8,7 +8,7 @@
 
 ## First Rule
 
-Read `SOUL.md` first, then this file, then `README.md`.
+Read `SOUL.md` first, then this file, then `README.md`, then `COLOR_PALETTE.md`.
 
 ---
 
@@ -94,6 +94,7 @@ Do not deviate from this stack unless Stephen explicitly approves:
 ## Command Policy
 
 Use pnpm for all repository operations.
+If pnpm is not globally available in the shell, use `corepack pnpm ...`.
 
 ### Canonical commands
 
@@ -117,7 +118,7 @@ pnpm run test:web-demo
 
 - `scripts/cli.ts` is the workspace command entrypoint.
 - `node scripts/cli.ts list` discovers apps in `apps/`.
-- `node scripts/cli.ts <dev|build|typecheck> <app|all>` is the execution contract.
+- `node scripts/cli.ts <dev|build|typecheck|test> <app|all>` is the execution contract.
 
 ---
 

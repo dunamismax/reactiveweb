@@ -69,7 +69,8 @@ At session start for this repo:
 1. Read `SOUL.md`.
 2. Read `AGENTS.md`.
 3. Read `README.md`.
-4. Execute work against the current repository contract.
+4. Read `COLOR_PALETTE.md`.
+5. Execute work against the current repository contract.
 
 ---
 

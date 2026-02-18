@@ -13,6 +13,12 @@ Monorepo for Stephen Sawyer's React projects and apps, built on Node.js + pnpm a
 - Zod for input/env validation
 - Biome for linting + formatting
 
+## Visual Identity
+
+- Canonical palette file: `COLOR_PALETTE.md`
+- Required baseline: `Main` > `Dark Soft`
+- UI color usage should map to semantic tokens (see `apps/web-demo/app/app.css` and `apps/web-demo/app/lib/semantic-styles.ts`)
+
 ## Repo Layout
 
 - `apps/` application projects
@@ -28,7 +34,7 @@ Monorepo for Stephen Sawyer's React projects and apps, built on Node.js + pnpm a
 
 ```bash
 corepack enable
-pnpm install
+corepack pnpm install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -39,8 +45,8 @@ docker run -d \
   postgres:16-alpine
 cp .env.example .env
 set -a; source .env; set +a
-pnpm run demo:bootstrap
-pnpm run dev
+corepack pnpm run demo:bootstrap
+corepack pnpm run dev
 ```
 
 `AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `web-demo` stores and verifies per-user password hashes in Postgres.
@@ -50,27 +56,27 @@ pnpm run dev
 
 ```bash
 # list all apps
-pnpm run apps:list
+corepack pnpm run apps:list
 
 # run flagship demo app
-pnpm run dev
+corepack pnpm run dev
 
 # run reusable starter template app
-pnpm run dev:template
+corepack pnpm run dev:template
 
 # run a specific app
-pnpm run dev:app web-template
+corepack pnpm run dev:app web-template
 
 # database bootstrap helpers for web-demo
-pnpm run db:migrate
-pnpm run demo:seed
-pnpm run demo:bootstrap
+corepack pnpm run db:migrate
+corepack pnpm run demo:seed
+corepack pnpm run demo:bootstrap
 
 # quality checks
-pnpm run lint
-pnpm run typecheck
-pnpm run build
-pnpm run test:web-demo
+corepack pnpm run lint
+corepack pnpm run typecheck
+corepack pnpm run build
+corepack pnpm run test:web-demo
 ```
 
 ## Starter Apps
