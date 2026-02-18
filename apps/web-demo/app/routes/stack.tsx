@@ -11,7 +11,7 @@ import type { Route } from "./+types/stack";
 const stackRows = [
   {
     label: "Runtime",
-    detail: "Node.js 22+ and pnpm run workspace scripts, app tasks, and package installs.",
+    detail: "Node.js 24.13.1+ and pnpm run workspace scripts, app tasks, and package installs.",
   },
   {
     label: "Frontend",

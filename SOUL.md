@@ -35,7 +35,7 @@ Build a durable, scalable React monorepo where many production apps can coexist 
 - Type safety is non-negotiable for long-term velocity.
 - SPA-first React Router apps are the default for this repo.
 - Tooling should be fast, boring, and deterministic.
-- Node.js 22+ with pnpm is the default runtime/tooling baseline.
+- Node.js 24.13.1+ with pnpm is the default runtime/tooling baseline.
 - Fast human feedback beats long speculative implementation cycles.
 - Documentation is part of the product, not a side task.
 

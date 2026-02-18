@@ -5,21 +5,21 @@
   "type": "module",
   "packageManager": "pnpm@10.30.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24.13.1"
   },
   "scripts": {
-    "dev": "node --experimental-strip-types scripts/cli.ts dev web-demo",
-    "dev:template": "node --experimental-strip-types scripts/cli.ts dev web-template",
-    "dev:app": "node --experimental-strip-types scripts/cli.ts dev",
-    "db:migrate": "node --experimental-strip-types scripts/db-migrate.ts",
-    "demo:seed": "node --experimental-strip-types scripts/web-demo-seed.ts",
-    "demo:bootstrap": "node --experimental-strip-types scripts/web-demo-bootstrap.ts",
-    "build": "node --experimental-strip-types scripts/cli.ts build all",
-    "typecheck": "node --experimental-strip-types scripts/cli.ts typecheck all",
+    "dev": "node scripts/cli.ts dev web-demo",
+    "dev:template": "node scripts/cli.ts dev web-template",
+    "dev:app": "node scripts/cli.ts dev",
+    "db:migrate": "node scripts/db-migrate.ts",
+    "demo:seed": "node scripts/web-demo-seed.ts",
+    "demo:bootstrap": "node scripts/web-demo-bootstrap.ts",
+    "build": "node scripts/cli.ts build all",
+    "typecheck": "node scripts/cli.ts typecheck all",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "apps:list": "node --experimental-strip-types scripts/cli.ts list",
-    "test:web-demo": "node --experimental-strip-types scripts/cli.ts test web-demo"
+    "apps:list": "node scripts/cli.ts list",
+    "test:web-demo": "node scripts/cli.ts test web-demo"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",

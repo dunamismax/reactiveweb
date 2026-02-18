@@ -26,7 +26,7 @@ Read `SOUL.md` first, then this file, then `README.md`.
 
 Do not deviate from this stack unless Stephen explicitly approves:
 
-- Runtime + package manager + task runner: **Node.js 22+ + pnpm**
+- Runtime + package manager + task runner: **Node.js 24.13.1+ + pnpm**
 - App framework: **Vite + React Router (framework mode, SPA-first)**
 - UI runtime: **React 19 + TypeScript**
 - Styling/components: **Tailwind CSS + shadcn/ui patterns**
@@ -110,8 +110,8 @@ pnpm run test:web-demo
 ### App orchestration
 
 - `scripts/cli.ts` is the workspace command entrypoint.
-- `node --experimental-strip-types scripts/cli.ts list` discovers apps in `apps/`.
-- `node --experimental-strip-types scripts/cli.ts <dev|build|typecheck> <app|all>` is the execution contract.
+- `node scripts/cli.ts list` discovers apps in `apps/`.
+- `node scripts/cli.ts <dev|build|typecheck> <app|all>` is the execution contract.
 
 ---
 

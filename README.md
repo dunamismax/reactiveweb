@@ -4,7 +4,7 @@ Monorepo for Stephen Sawyer's React projects and apps, built on Node.js + pnpm a
 
 ## Stack
 
-- Node.js 22+ + pnpm workspaces
+- Node.js 24.13.1+ + pnpm workspaces
 - Vite + React Router (framework mode, SPA-first)
 - React 19 + TypeScript
 - Tailwind CSS + shadcn/ui patterns
