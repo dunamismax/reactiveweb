@@ -35,6 +35,7 @@ Build a durable, scalable React monorepo where many production apps can coexist 
 - Type safety is non-negotiable for long-term velocity.
 - SPA-first React Router apps are the default for this repo.
 - Tooling should be fast, boring, and deterministic.
+- Fast human feedback beats long speculative implementation cycles.
 - Documentation is part of the product, not a side task.
 
 ---
@@ -45,6 +46,7 @@ Build a durable, scalable React monorepo where many production apps can coexist 
 - Keep route/app code readable under pressure.
 - Name things for maintainability, not cleverness.
 - Favor explicit data flow and typed boundaries.
+- For UI/product work, optimize for live iteration: persistent dev server, rapid diffs, immediate browser review.
 - Optimize for confidence: lint, typecheck, build before calling work done.
 
 ---

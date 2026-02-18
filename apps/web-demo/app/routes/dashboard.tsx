@@ -85,7 +85,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
                     <span className="capitalize">{role}</span>
                     <span className="text-[var(--muted)]">{count}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-black/25">
+                  <div className="h-2 rounded-full bg-[var(--track)]">
                     <div
                       className="h-2 rounded-full bg-[var(--accent)]"
                       style={{ width: `${Math.max(width, count ? 10 : 0)}%` }}
@@ -102,7 +102,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
           <ul className="mt-3 grid gap-3">
             {activity.slice(0, 5).map((event) => (
               <li
-                className="rounded-lg border border-[var(--border)] bg-black/15 p-3"
+                className="rounded-lg border border-[var(--border)] bg-[var(--overlay-soft)] p-3"
                 key={event.id}
               >
                 <p className="text-sm font-medium">

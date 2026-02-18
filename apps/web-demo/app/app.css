@@ -1,14 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #041a19;
-  --panel: #0d2b2a;
-  --surface: #133c3a;
-  --border: #236360;
-  --foreground: #f6f8ef;
-  --muted: #b6cbc4;
-  --accent: #f97316;
-  --accent-foreground: #120900;
+  --background: #101820;
+  --panel: #17222c;
+  --surface: #22303d;
+  --border: #7f8a8f;
+  --foreground: #f2e8cf;
+  --muted: #d3c7ab;
+  --accent: #d97d54;
+  --accent-foreground: #101820;
+  --overlay-soft: #1018203d;
+  --overlay: #10182059;
+  --overlay-strong: #10182080;
+  --track: #22303d80;
+  --tone-good-bg: #f2e8cf33;
+  --tone-good-fg: #f2e8cf;
+  --tone-warn-bg: #d97d5440;
+  --tone-warn-fg: #ffe7da;
 }
 
 * {
@@ -24,9 +32,9 @@ body {
   margin: 0;
   color: var(--foreground);
   background:
-    radial-gradient(circle at 15% 0%, #1a5f5b 0%, transparent 48%),
-    radial-gradient(circle at 90% 12%, #833b14 0%, transparent 36%),
-    linear-gradient(160deg, #031211 0%, var(--background) 55%, #05201f 100%);
+    radial-gradient(circle at 18% 8%, #22303d 0%, transparent 42%),
+    radial-gradient(circle at 85% 10%, #d97d5430 0%, transparent 36%),
+    linear-gradient(160deg, #101820 0%, #17222c 55%, #101820 100%);
   font-family: "Space Grotesk", "Manrope", "Avenir Next", "Segoe UI", sans-serif;
 }
 

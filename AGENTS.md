@@ -65,6 +65,15 @@ Do not deviate from this stack unless Stephen explicitly approves:
 - Keep changes reviewable and intentional.
 - Execute directly, then verify with commands.
 
+### Live Iteration Loop (Default for Frontend Work)
+
+- Keep one dev server running in the background while iterating.
+- Prefer hot-reload/HMR feedback over restart-heavy workflows.
+- Make small visual/function changes, then hand off quickly for in-browser review.
+- Apply feedback immediately and continue in short iteration cycles.
+- Restart the dev server only when required (config/runtime/env changes), not for routine UI edits.
+- Keep verification proportional during iteration (`bun run lint` minimum), then run full gates before final sign-off.
+
 ---
 
 ## Command Policy

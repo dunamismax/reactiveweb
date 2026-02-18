@@ -73,7 +73,7 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
           <ul className="mt-3 grid gap-2 text-sm">
             {tableNames.map((tableName) => (
               <li
-                className="rounded-lg border border-[var(--border)] bg-black/15 px-3 py-2 font-mono"
+                className="rounded-lg border border-[var(--border)] bg-[var(--overlay-soft)] px-3 py-2 font-mono"
                 key={tableName}
               >
                 {tableName}

@@ -10,8 +10,8 @@ type StatCardProps = {
 
 const toneClasses = {
   default: "bg-[var(--surface)] text-[var(--foreground)]",
-  good: "bg-emerald-950/15 text-emerald-200",
-  warn: "bg-amber-950/20 text-amber-200",
+  good: "bg-[var(--tone-good-bg)] text-[var(--tone-good-fg)]",
+  warn: "bg-[var(--tone-warn-bg)] text-[var(--tone-warn-fg)]",
 };
 
 export function StatCard({ label, value, trend, tone = "default", icon }: StatCardProps) {

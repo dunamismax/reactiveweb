@@ -164,7 +164,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             <label className="grid gap-1 text-sm">
               <span className="text-[var(--muted)]">Name</span>
               <input
-                className="rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 outline-none focus:border-[var(--accent)]"
+                className="rounded-lg border border-[var(--border)] bg-[var(--overlay)] px-3 py-2 outline-none focus:border-[var(--accent)]"
                 name="name"
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Jordan Lee"
@@ -174,7 +174,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             <label className="grid gap-1 text-sm">
               <span className="text-[var(--muted)]">Email</span>
               <input
-                className="rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 outline-none focus:border-[var(--accent)]"
+                className="rounded-lg border border-[var(--border)] bg-[var(--overlay)] px-3 py-2 outline-none focus:border-[var(--accent)]"
                 name="email"
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="jordan@reactiveweb.dev"
@@ -185,13 +185,13 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             <label className="grid gap-1 text-sm">
               <span className="text-[var(--muted)]">Role</span>
               <select
-                className="rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 outline-none focus:border-[var(--accent)]"
+                className="rounded-lg border border-[var(--border)] bg-[var(--overlay)] px-3 py-2 outline-none focus:border-[var(--accent)]"
                 name="role"
                 onChange={(event) => setRole(event.target.value as Role)}
                 value={role}
               >
                 {roleOptions.map((option) => (
-                  <option className="bg-[#0f2f2c]" key={option} value={option}>
+                  <option className="bg-[var(--panel)]" key={option} value={option}>
                     {option}
                   </option>
                 ))}
