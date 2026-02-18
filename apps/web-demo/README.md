@@ -67,12 +67,12 @@ What it does:
 
 ```mermaid
 flowchart LR
-  A[POST /auth action] --> B[server validates form with Zod]
-  B --> C[server fetches Auth.js CSRF state]
-  C --> D[forward POST /api/auth/callback/credentials]
-  D --> E[Auth.js authorize()]
-  E --> F[load demo user by email]
-  F --> G[verify password hash]
-  G --> H[issue JWT session cookie]
-  H --> I[protected loaders/actions use requireAuthSession]
+  A["POST /auth action"] --> B["server validates form with Zod"]
+  B --> C["server fetches Auth.js CSRF state"]
+  C --> D["forward POST /api/auth/callback/credentials"]
+  D --> E["Auth.js authorize"]
+  E --> F["load demo user by email"]
+  F --> G["verify password hash"]
+  G --> H["issue JWT session cookie"]
+  H --> I["protected loaders/actions use requireAuthSession"]
 ```
