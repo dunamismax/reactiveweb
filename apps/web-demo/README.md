@@ -74,8 +74,11 @@ corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
 Run modes (from repo root):
 
 ```bash
-# CI/headless snapshot assertion run
+# deterministic CI/headless run (prep + assert, use locally)
 corepack pnpm run test:visual:web-demo:ci
+
+# headless assert-only run (CI workflow use after prep)
+corepack pnpm run test:visual:web-demo:assert:ci
 
 # local headed debug run
 corepack pnpm run test:visual:web-demo:debug
@@ -86,10 +89,11 @@ corepack pnpm run test:visual:web-demo:update
 
 Determinism controls in this setup:
 
-1. `demo:bootstrap` runs before each visual command.
-2. `demo:visual:prepare` provisions a stable invite fixture token used by `/invite/:token`.
+1. `demo:bootstrap` runs before each full visual command (`test:visual:web-demo`, `test:visual:web-demo:ci`, `test:visual:web-demo:debug`, `test:visual:web-demo:update`).
+2. `demo:visual:prepare` provisions a stable invite fixture token used by `/invite/:token` before each full visual command.
 3. Auth setup test signs in once and reuses storage state for protected routes.
 4. Playwright uses fixed viewport (`1440x900`), `en-US` locale, `UTC` timezone, reduced motion, and animation disabling during screenshot capture.
+5. `test:visual:web-demo:assert:ci` is assert-only and is intended for CI after prep has already run.
 
 ## CI Visual Regression
 
@@ -97,7 +101,7 @@ Determinism controls in this setup:
 - CI provisions Postgres at `localhost:55432`, then runs:
   - `corepack pnpm run demo:bootstrap`
   - `corepack pnpm run demo:visual:prepare`
-  - `corepack pnpm run test:visual:web-demo:ci`
+  - `corepack pnpm run test:visual:web-demo:assert:ci`
 - On failures, Playwright artifacts are uploaded (`apps/web-demo/test-results`, `apps/web-demo/playwright-report`).
 
 ## Baseline Update Workflow

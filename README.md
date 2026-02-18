@@ -85,8 +85,11 @@ corepack pnpm run test:web-demo
 # one-time browser install
 corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
 
-# headless (CI-style)
+# headless deterministic run (prep + assert, use locally)
 corepack pnpm run test:visual:web-demo:ci
+
+# headless assert-only run (CI workflow use after prep)
+corepack pnpm run test:visual:web-demo:assert:ci
 
 # local headed debug
 corepack pnpm run test:visual:web-demo:debug
@@ -95,9 +98,10 @@ corepack pnpm run test:visual:web-demo:debug
 corepack pnpm run test:visual:web-demo:update
 ```
 
-These commands run deterministic prep first (`demo:bootstrap` + `demo:visual:prepare`) so protected routes and `/invite/:token` fixtures are stable before screenshots.
+`test:visual:web-demo`, `test:visual:web-demo:ci`, `test:visual:web-demo:debug`, and `test:visual:web-demo:update` run deterministic prep first (`demo:bootstrap` + `demo:visual:prepare`) so protected routes and `/invite/:token` fixtures are stable before screenshots.
+`test:visual:web-demo:assert:ci` is assert-only (Playwright CI command) and expects prep to already be done.
 
-CI runs visual regression in a dedicated `visual-regression` job with Postgres on `localhost:55432` and uploads Playwright artifacts on failures.
+CI runs visual regression in a dedicated `visual-regression` job with Postgres on `localhost:55432`, executes prep once (`demo:bootstrap` + `demo:visual:prepare`), then runs `test:visual:web-demo:assert:ci`. Playwright artifacts are uploaded on failures.
 When snapshots intentionally change, run `corepack pnpm run test:visual:web-demo:update` locally and commit updated `apps/web-demo/tests/visual/routes.visual.spec.ts-snapshots/*.png`.
 
 ## Starter Apps

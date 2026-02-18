@@ -21,8 +21,9 @@
     "apps:list": "node scripts/cli.ts list",
     "test:web-demo": "node scripts/cli.ts test web-demo",
     "demo:visual:prepare": "node scripts/web-demo-visual-prepare.ts",
+    "test:visual:web-demo:assert:ci": "corepack pnpm --filter @reactiveweb/web-demo run test:visual:ci",
     "test:visual:web-demo": "corepack pnpm run demo:bootstrap && corepack pnpm run demo:visual:prepare && corepack pnpm --filter @reactiveweb/web-demo run test:visual",
-    "test:visual:web-demo:ci": "corepack pnpm run demo:bootstrap && corepack pnpm run demo:visual:prepare && corepack pnpm --filter @reactiveweb/web-demo run test:visual:ci",
+    "test:visual:web-demo:ci": "corepack pnpm run demo:bootstrap && corepack pnpm run demo:visual:prepare && corepack pnpm run test:visual:web-demo:assert:ci",
     "test:visual:web-demo:debug": "corepack pnpm run demo:bootstrap && corepack pnpm run demo:visual:prepare && corepack pnpm --filter @reactiveweb/web-demo run test:visual:debug",
     "test:visual:web-demo:update": "corepack pnpm run demo:bootstrap && corepack pnpm run demo:visual:prepare && corepack pnpm --filter @reactiveweb/web-demo run test:visual:update"
   },

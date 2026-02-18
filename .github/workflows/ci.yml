@@ -84,8 +84,8 @@ jobs:
       - name: Prepare visual fixtures
         run: corepack pnpm run demo:visual:prepare
 
-      - name: Run visual regression
-        run: corepack pnpm run test:visual:web-demo:ci
+      - name: Run visual regression assertions
+        run: corepack pnpm run test:visual:web-demo:assert:ci
 
       - name: Upload visual artifacts on failure
         if: failure()
