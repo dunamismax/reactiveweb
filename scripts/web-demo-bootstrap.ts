@@ -1,5 +1,6 @@
 async function runCommand(cmd: string[]) {
   const proc = Bun.spawn(cmd, {
+    env: process.env,
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
