@@ -86,8 +86,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const userActivity = allActivity
     .filter(
       (row) =>
-        row.actorName === dbUser.name ||
-        row.target.toLowerCase().includes(dbUser.email.toLowerCase()),
+        row.actorId === dbUser.id || row.target.toLowerCase().includes(dbUser.email.toLowerCase()),
     )
     .slice(0, 20)
     .map(mapDbActivityToEvent);

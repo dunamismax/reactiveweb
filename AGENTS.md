@@ -65,6 +65,15 @@ Do not deviate from this stack unless Stephen explicitly approves:
 - Keep changes reviewable and intentional.
 - Execute directly, then verify with commands.
 
+### Next-Agent Handoff Prompt (Standard)
+
+- After completing work and reporting results, always ask Stephen whether to generate a handoff prompt for the next AI agent.
+- If Stephen says yes, generate a context-aware next-agent prompt that:
+  - uses current repo/app state and recent changes,
+  - prioritizes highest-value next steps,
+  - includes concrete implementation goals, constraints, verification commands, and expected response format.
+- Treat this as part of the normal workflow for every completed task.
+
 ### Live Iteration Loop (Default for Frontend Work)
 
 - Keep one dev server running in the background while iterating.

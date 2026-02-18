@@ -13,16 +13,6 @@ const defaultWorkspaceUsers = [
 export async function ensureDemoWorkspaceSeed(adminEmail: string, passwordHash: string) {
   const [{ total }] = await db.select({ total: count() }).from(demoUsers);
   if (total > 0) {
-    await db
-      .update(demoUsers)
-      .set({
-        name: defaultWorkspaceUsers[0].name,
-        role: defaultWorkspaceUsers[0].role,
-        active: defaultWorkspaceUsers[0].active,
-        passwordHash,
-        updatedAt: new Date(),
-      })
-      .where(eq(demoUsers.email, adminEmail.toLowerCase()));
     return;
   }
 
@@ -197,6 +187,7 @@ export async function listRecentDemoActivity(limit = 12) {
   return db
     .select({
       id: demoAuditLogs.id,
+      actorId: demoAuditLogs.actorId,
       action: demoAuditLogs.action,
       target: demoAuditLogs.target,
       createdAt: demoAuditLogs.createdAt,

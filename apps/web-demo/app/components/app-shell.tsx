@@ -29,14 +29,18 @@ function navClass(isActive: boolean) {
   ].join(" ");
 }
 
-const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPod|iPad/.test(navigator.platform);
-const kbdHint = isMac ? "⌘K" : "Ctrl+K";
-
 export function AppShell({ currentUserName, userCount }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [kbdHint, setKbdHint] = useState("Ctrl+K");
   const navigation = useNavigation();
   const isNavigating = navigation.state !== "idle";
+
+  useEffect(() => {
+    if (/Mac|iPhone|iPod|iPad/.test(navigator.platform)) {
+      setKbdHint("⌘K");
+    }
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
