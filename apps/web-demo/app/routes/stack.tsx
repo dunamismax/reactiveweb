@@ -1,4 +1,4 @@
-import { appProjects, demoAuditLogs, demoUsers } from "@reactiveweb/db/schema";
+import { appProjects, demoAuditLogs, demoInvites, demoUsers } from "@reactiveweb/db/schema";
 import { getTableName } from "drizzle-orm";
 import { DataList } from "~/components/data-list";
 import { SectionHeader } from "~/components/section-header";
@@ -11,7 +11,7 @@ import type { Route } from "./+types/stack";
 const stackRows = [
   {
     label: "Runtime",
-    detail: "Bun runs the workspace scripts, app tasks, and package installs.",
+    detail: "Node.js 22+ and pnpm run workspace scripts, app tasks, and package installs.",
   },
   {
     label: "Frontend",
@@ -47,6 +47,7 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
     getTableName(appProjects),
     getTableName(demoUsers),
     getTableName(demoAuditLogs),
+    getTableName(demoInvites),
   ];
 
   return (

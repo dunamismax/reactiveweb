@@ -5,7 +5,7 @@ import {
   getDemoUserCount,
   insertDemoAuditLog,
   type listDemoUsers,
-  type listRecentDemoActivity,
+  listRecentDemoActivity,
 } from "@reactiveweb/db";
 import { redirect } from "react-router";
 import { getAuthSession } from "./auth.server";
@@ -51,9 +51,16 @@ export function mapDbUserToDemoUser(
   };
 }
 
-export function mapDbActivityToEvent(
-  row: Awaited<ReturnType<typeof listRecentDemoActivity>>[number],
-): ActivityEvent {
+type ActivityRow = {
+  id: string;
+  actorId: string | null;
+  action: string;
+  target: string;
+  createdAt: Date;
+  actorName: string | null;
+};
+
+export function mapDbActivityToEvent(row: ActivityRow): ActivityEvent {
   return {
     id: row.id,
     actor: row.actorName ?? "System",
@@ -61,6 +68,82 @@ export function mapDbActivityToEvent(
     target: row.target,
     createdAt: serializeDate(row.createdAt),
   };
+}
+
+// Fetch a ceiling of recent activity, then apply filters and pagination in-memory.
+// Sufficient for demo-scale datasets (hundreds of audit events).
+export async function listActivity(params: {
+  page: number;
+  pageSize: number;
+  action?: string;
+  actorName?: string;
+  from?: Date;
+  to?: Date;
+  q?: string;
+}) {
+  const ceiling = Math.min(params.page * params.pageSize * 2 + 200, 500);
+  const allRows = await listRecentDemoActivity(ceiling);
+
+  let filtered: typeof allRows = allRows;
+
+  if (params.action) {
+    const actionLower = params.action.toLowerCase();
+    filtered = filtered.filter((r) => r.action.toLowerCase() === actionLower);
+  }
+  if (params.actorName) {
+    const nameLower = params.actorName.toLowerCase();
+    filtered = filtered.filter((r) => r.actorName?.toLowerCase().includes(nameLower) ?? false);
+  }
+  if (params.from) {
+    const from = params.from;
+    filtered = filtered.filter((r) => r.createdAt >= from);
+  }
+  if (params.to) {
+    const to = params.to;
+    filtered = filtered.filter((r) => r.createdAt <= to);
+  }
+  if (params.q) {
+    const q = params.q.toLowerCase();
+    filtered = filtered.filter(
+      (r) =>
+        r.action.toLowerCase().includes(q) ||
+        r.target.toLowerCase().includes(q) ||
+        (r.actorName?.toLowerCase().includes(q) ?? false),
+    );
+  }
+
+  const total = filtered.length;
+  const offset = (params.page - 1) * params.pageSize;
+  const rows = filtered.slice(offset, offset + params.pageSize);
+
+  return {
+    rows: rows.map(mapDbActivityToEvent),
+    total,
+  };
+}
+
+export async function fetchActivityTrendRows(days = 7) {
+  // Fetch a generous slice; trend only needs the last N days.
+  const rows = await listRecentDemoActivity(500);
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - days + 1);
+  cutoff.setUTCHours(0, 0, 0, 0);
+  return rows.filter((r) => r.createdAt >= cutoff);
+}
+
+export function buildActivityTrend(
+  rows: { createdAt: Date; action: string }[],
+  days = 7,
+): { day: string; label: string; count: number }[] {
+  const now = new Date();
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - (days - 1 - i));
+    const dayKey = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString("en-US", { weekday: "short" });
+    const count = rows.filter((r) => r.createdAt.toISOString().slice(0, 10) === dayKey).length;
+    return { day: dayKey, label, count };
+  });
 }
 
 export async function ensureDemoSeeded() {

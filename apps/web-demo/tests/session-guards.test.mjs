@@ -1,35 +1,43 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const authServer = {
-  authHandler: mock(),
-  forwardSignIn: mock(),
-  forwardSignOut: mock(),
-  getAuthSession: mock(),
-};
-
-const db = {
-  createDemoUser: mock(),
-  ensureDemoWorkspaceSeed: mock(async () => null),
-  fillMissingDemoUserPasswordHashes: mock(async () => 0),
-  getDemoUserByEmail: mock(),
-  getDemoUserById: mock(),
-  getDemoUserCount: mock(async () => 0),
-  insertDemoAuditLog: mock(async () => null),
-  listDemoUsers: mock(async () => []),
-  listRecentDemoActivity: mock(async () => []),
-  markDemoUserSeen: mock(),
-  updateDemoUserRole: mock(),
-  updateDemoUserStatus: mock(),
-};
-
-mock.module("~/lib/auth.server", () => authServer);
-mock.module("@reactiveweb/db", () => db);
-mock.module("~/lib/env.server", () => ({
-  demoServerEnv: {
-    AUTH_DEMO_PASSWORD: "demo-pass-123",
-    VITE_DEMO_ADMIN_EMAIL: "admin@reactiveweb.dev",
+const { authServer, db } = vi.hoisted(() => ({
+  authServer: {
+    authHandler: vi.fn(),
+    forwardSignIn: vi.fn(),
+    forwardSignOut: vi.fn(),
+    getAuthSession: vi.fn(),
+  },
+  db: {
+    createDemoUser: vi.fn(),
+    ensureDemoWorkspaceSeed: vi.fn(async () => null),
+    fillMissingDemoUserPasswordHashes: vi.fn(async () => 0),
+    getDemoUserByEmail: vi.fn(),
+    getDemoUserById: vi.fn(),
+    getDemoUserCount: vi.fn(async () => 0),
+    insertDemoAuditLog: vi.fn(async () => null),
+    listDemoUsers: vi.fn(async () => []),
+    listRecentDemoActivity: vi.fn(async () => []),
+    markDemoUserSeen: vi.fn(),
+    updateDemoUserRole: vi.fn(),
+    updateDemoUserStatus: vi.fn(),
   },
 }));
+
+const mockDemoServerEnv = {
+  NODE_ENV: "test",
+  DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
+  AUTH_SECRET: "replace-with-16+-char-secret",
+  AUTH_DEMO_PASSWORD: "demo-pass-123",
+  VITE_DEMO_ADMIN_EMAIL: "admin@reactiveweb.dev",
+};
+
+vi.mock("~/lib/auth.server", () => authServer);
+vi.mock("../app/lib/auth.server", () => authServer);
+vi.mock("../app/lib/auth.server.ts", () => authServer);
+vi.mock("@reactiveweb/db", () => db);
+vi.mock("~/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
+vi.mock("../app/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
+vi.mock("../app/lib/env.server.ts", () => ({ demoServerEnv: mockDemoServerEnv }));
 
 const demoState = await import("../app/lib/demo-state.server");
 

@@ -1,40 +1,55 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const VALID_ACTOR_ID = "79f0e8e6-4603-4711-bdb8-22af87ce756d";
+const { VALID_ACTOR_ID, db, demoState, authServer } = vi.hoisted(() => {
+  const VALID_ACTOR_ID = "79f0e8e6-4603-4711-bdb8-22af87ce756d";
 
-const db = {
-  createDemoUser: mock(),
-  getDemoUserById: mock(),
-  listDemoUsers: mock(),
-  updateDemoUserRole: mock(),
-  updateDemoUserStatus: mock(),
+  return {
+    VALID_ACTOR_ID,
+    db: {
+      createDemoInvite: vi.fn(),
+      getDemoUserByEmail: vi.fn(),
+      getDemoUserById: vi.fn(),
+      listDemoUsers: vi.fn(),
+      markDemoUserSeen: vi.fn(),
+      updateDemoUserRole: vi.fn(),
+      updateDemoUserStatus: vi.fn(),
+    },
+    demoState: {
+      ensureDemoSeeded: vi.fn(async () => null),
+      mapDbUserToDemoUser: (user) => user,
+      nextRole: (role) => (role === "viewer" ? "editor" : "viewer"),
+      recordAuditEvent: vi.fn(async () => null),
+      requireAuthSession: vi.fn(async () => ({
+        user: { id: VALID_ACTOR_ID, name: "Owner", role: "owner" },
+      })),
+    },
+    authServer: {
+      forwardSignIn: vi.fn(),
+      forwardSignOut: vi.fn(),
+      getAuthSession: vi.fn(),
+      authHandler: vi.fn(),
+    },
+  };
+});
+
+const mockDemoServerEnv = {
+  NODE_ENV: "test",
+  DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
+  AUTH_SECRET: "replace-with-16+-char-secret",
+  AUTH_DEMO_PASSWORD: "demo-pass-123",
+  VITE_DEMO_ADMIN_EMAIL: "admin@reactiveweb.dev",
 };
 
-const demoState = {
-  ensureDemoSeeded: mock(async () => null),
-  mapDbUserToDemoUser: (user) => user,
-  nextRole: (role) => (role === "viewer" ? "editor" : "viewer"),
-  recordAuditEvent: mock(async () => null),
-  requireAuthSession: mock(async () => ({
-    user: { id: VALID_ACTOR_ID, name: "Owner", role: "owner" },
-  })),
-};
-
-const authServer = {
-  forwardSignIn: mock(),
-  forwardSignOut: mock(),
-  getAuthSession: mock(),
-};
-
-mock.module("@reactiveweb/db", () => db);
-mock.module("~/lib/demo-state.server", () => demoState);
-mock.module("~/lib/auth.server", () => authServer);
-mock.module("~/lib/env.server", () => ({
-  demoServerEnv: {
-    AUTH_DEMO_PASSWORD: "demo-pass-123",
-    VITE_DEMO_ADMIN_EMAIL: "admin@reactiveweb.dev",
-  },
-}));
+vi.mock("@reactiveweb/db", () => db);
+vi.mock("~/lib/demo-state.server", () => demoState);
+vi.mock("../app/lib/demo-state.server", () => demoState);
+vi.mock("../app/lib/demo-state.server.ts", () => demoState);
+vi.mock("~/lib/auth.server", () => authServer);
+vi.mock("../app/lib/auth.server", () => authServer);
+vi.mock("../app/lib/auth.server.ts", () => authServer);
+vi.mock("~/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
+vi.mock("../app/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
+vi.mock("../app/lib/env.server.ts", () => ({ demoServerEnv: mockDemoServerEnv }));
 
 const usersRoute = await import("../app/routes/users.tsx");
 const authRoute = await import("../app/routes/auth.tsx");
@@ -51,7 +66,7 @@ function buildPostRequest(pathname, fields) {
 
 describe("users action", () => {
   beforeEach(() => {
-    db.createDemoUser.mockReset();
+    db.createDemoInvite.mockReset();
     db.getDemoUserById.mockReset();
     db.updateDemoUserRole.mockReset();
     db.updateDemoUserStatus.mockReset();
@@ -63,26 +78,91 @@ describe("users action", () => {
     });
   });
 
-  it("creates a user for createUser intent", async () => {
-    db.createDemoUser.mockResolvedValue({ id: "u-1", email: "new@reactiveweb.dev" });
+  it("generates an invite link for inviteUser intent", async () => {
+    db.createDemoInvite.mockResolvedValue({
+      id: "i-1",
+      email: "new@reactiveweb.dev",
+      role: "viewer",
+      token: "invite-token",
+      expiresAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
 
     const response = await usersRoute.action({
       request: buildPostRequest("/users", {
-        intent: "createUser",
-        name: "New User",
+        intent: "inviteUser",
         email: "new@reactiveweb.dev",
         role: "viewer",
       }),
     });
 
     expect(response.ok).toBe(true);
-    expect(response.intent).toBe("createUser");
-    expect(db.createDemoUser).toHaveBeenCalledTimes(1);
-    expect(db.createDemoUser.mock.calls[0][0]).toMatchObject({
+    expect(response.intent).toBe("inviteUser");
+    expect(response.inviteUrl).toContain("/invite/");
+    expect(db.createDemoInvite).toHaveBeenCalledTimes(1);
+    expect(db.createDemoInvite.mock.calls[0][0]).toMatchObject({
       email: "new@reactiveweb.dev",
       role: "viewer",
     });
-    expect(db.createDemoUser.mock.calls[0][0].passwordHash).toBeString();
+    expect(typeof db.createDemoInvite.mock.calls[0][0].token).toBe("string");
+  });
+
+  it("rejects invite creation for non-owner/admin roles", async () => {
+    demoState.requireAuthSession.mockResolvedValue({
+      user: { id: "viewer-1", name: "Viewer", role: "viewer" },
+    });
+
+    const run = usersRoute.action({
+      request: buildPostRequest("/users", {
+        intent: "inviteUser",
+        email: "new@reactiveweb.dev",
+        role: "viewer",
+      }),
+    });
+
+    await expect(run).rejects.toMatchObject({ status: 403 });
+    expect(db.createDemoInvite).not.toHaveBeenCalled();
+  });
+
+  it("allows admin invites for viewer/editor roles", async () => {
+    demoState.requireAuthSession.mockResolvedValue({
+      user: { id: "admin-1", name: "Admin", role: "admin" },
+    });
+    db.createDemoInvite.mockResolvedValue({
+      id: "i-1",
+      email: "new@reactiveweb.dev",
+      role: "viewer",
+      token: "invite-token",
+      expiresAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+
+    for (const role of ["viewer", "editor"]) {
+      const response = await usersRoute.action({
+        request: buildPostRequest("/users", {
+          intent: "inviteUser",
+          email: `new-${role}@reactiveweb.dev`,
+          role,
+        }),
+      });
+      expect(response.ok).toBe(true);
+    }
+  });
+
+  it("blocks admin invites for owner/admin roles", async () => {
+    demoState.requireAuthSession.mockResolvedValue({
+      user: { id: "admin-1", name: "Admin", role: "admin" },
+    });
+
+    for (const role of ["owner", "admin"]) {
+      const run = usersRoute.action({
+        request: buildPostRequest("/users", {
+          intent: "inviteUser",
+          email: `new-${role}@reactiveweb.dev`,
+          role,
+        }),
+      });
+      await expect(run).rejects.toMatchObject({ status: 403 });
+    }
+    expect(db.createDemoInvite).not.toHaveBeenCalled();
   });
 
   it("returns not found when cycleRole target is missing", async () => {
@@ -127,8 +207,7 @@ describe("users action", () => {
 
     const run = usersRoute.action({
       request: buildPostRequest("/users", {
-        intent: "createUser",
-        name: "Nope",
+        intent: "inviteUser",
         email: "nope@x.dev",
         role: "viewer",
       }),

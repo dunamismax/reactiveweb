@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 import { assertCanCreateUser, assertCanMutateUser } from "../app/lib/authorization.server";
 import { hashBootstrapPassword, hashPassword, verifyPassword } from "../app/lib/password.server";

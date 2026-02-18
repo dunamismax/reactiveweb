@@ -31,6 +31,12 @@ export const createUserInputSchema = z.object({
 });
 export type CreateUserInput = z.infer<typeof createUserInputSchema>;
 
+export const inviteUserInputSchema = z.object({
+  email: z.string().email("Enter a valid email address."),
+  role: roleSchema,
+});
+export type InviteUserInput = z.infer<typeof inviteUserInputSchema>;
+
 export const signInInputSchema = z.object({
   email: z.string().email("Use a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters."),
@@ -52,8 +58,7 @@ export const authActionSchema = z.discriminatedUnion("intent", [
 
 export const usersActionSchema = z.discriminatedUnion("intent", [
   z.object({
-    intent: z.literal("createUser"),
-    name: z.string().min(2, "Name must be at least 2 characters."),
+    intent: z.literal("inviteUser"),
     email: z.string().email("Enter a valid email address."),
     role: roleSchema,
   }),
@@ -67,6 +72,24 @@ export const usersActionSchema = z.discriminatedUnion("intent", [
   }),
 ]);
 
+export const settingsActionSchema = z.discriminatedUnion("intent", [
+  z.object({
+    intent: z.literal("updateProfile"),
+    name: z.string().min(2, "Name must be at least 2 characters."),
+  }),
+  z.object({
+    intent: z.literal("changePassword"),
+    currentPassword: z.string().min(8, "Current password must be at least 8 characters."),
+    newPassword: z.string().min(8, "New password must be at least 8 characters."),
+    confirmPassword: z.string().min(8, "Confirmation password must be at least 8 characters."),
+  }),
+]);
+
+export const inviteAcceptSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters."),
+  confirmPassword: z.string().min(8, "Confirmation password must be at least 8 characters."),
+});
+
 export type ActivityEvent = {
   id: string;
   actor: string;
@@ -74,3 +97,14 @@ export type ActivityEvent = {
   target: string;
   createdAt: string;
 };
+
+export const activityQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  action: z.string().optional(),
+  actor: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  q: z.string().optional(),
+});
+export type ActivityQuery = z.infer<typeof activityQuerySchema>;

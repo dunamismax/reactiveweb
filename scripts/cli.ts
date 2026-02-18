@@ -1,28 +1,47 @@
+import { spawn } from "node:child_process";
 import { readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const APPS_DIR = new URL("../apps", import.meta.url);
+const scriptsDir = dirname(fileURLToPath(import.meta.url));
+const rootDir = dirname(scriptsDir);
+const appsDir = join(rootDir, "apps");
 
 async function getApps() {
-  const entries = await readdir(APPS_DIR, { withFileTypes: true });
+  const entries = await readdir(appsDir, { withFileTypes: true });
   return entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
 }
 
-async function runInApp(app: string, script: string) {
-  const proc = Bun.spawn(["bun", "run", script], {
-    cwd: join(new URL("../apps", import.meta.url).pathname, app),
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  });
+function runInApp(app: string, script: string) {
+  const packageManagerExec = process.env.npm_execpath;
+  const runner = packageManagerExec?.includes("pnpm")
+    ? { command: process.execPath, args: [packageManagerExec] }
+    : { command: "pnpm", args: [] };
 
-  const code = await proc.exited;
-  if (code !== 0) {
-    process.exit(code);
-  }
+  return new Promise<void>((resolve, reject) => {
+    const proc = spawn(runner.command, [...runner.args, "run", script], {
+      cwd: join(appsDir, app),
+      stdio: "inherit",
+      env: process.env,
+    });
+
+    proc.on("error", reject);
+    proc.on("close", (code, signal) => {
+      if (signal) {
+        reject(new Error(`Command terminated by signal ${signal}`));
+        return;
+      }
+
+      if (code && code !== 0) {
+        process.exit(code);
+      }
+
+      resolve();
+    });
+  });
 }
 
 async function main() {
@@ -37,7 +56,7 @@ async function main() {
   }
 
   if (!command) {
-    console.error("Usage: bun run scripts/cli.ts <dev|build|typecheck|list> [app|all]");
+    console.error("Usage: node scripts/cli.ts <dev|build|typecheck|test|list> [app|all]");
     process.exit(1);
   }
 

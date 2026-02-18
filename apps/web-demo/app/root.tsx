@@ -10,7 +10,7 @@ export const meta: Route.MetaFunction = () => [
   {
     name: "description",
     content:
-      "Flagship ReactiveWeb app demonstrating Bun, React Router, Tailwind, Auth.js patterns, Drizzle schema contracts, and Zod validation.",
+      "Flagship ReactiveWeb app demonstrating Node.js, pnpm, React Router, Tailwind, Auth.js patterns, Drizzle schema contracts, and Zod validation.",
   },
 ];
 

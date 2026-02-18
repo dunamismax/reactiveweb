@@ -5,7 +5,9 @@ import { SectionHeader } from "~/components/section-header";
 import { Skeleton } from "~/components/skeleton";
 import { StatCard } from "~/components/stat-card";
 import {
+  buildActivityTrend,
   ensureDemoSeeded,
+  fetchActivityTrendRows,
   mapDbActivityToEvent,
   mapDbUserToDemoUser,
   requireAuthSession,
@@ -36,17 +38,22 @@ export async function loader({ request }: Route.LoaderArgs) {
   const session = await requireAuthSession(request);
   await ensureDemoSeeded();
 
-  const [users, activity] = await Promise.all([listDemoUsers(), listRecentDemoActivity(12)]);
+  const [users, activity, trendRows] = await Promise.all([
+    listDemoUsers(),
+    listRecentDemoActivity(12),
+    fetchActivityTrendRows(7),
+  ]);
 
   return {
     currentUserName: session.user.name,
     users: users.map(mapDbUserToDemoUser),
     activity: activity.map(mapDbActivityToEvent),
+    trend: buildActivityTrend(trendRows, 7),
   };
 }
 
 export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
-  const { currentUserName, users, activity } = loaderData;
+  const { currentUserName, users, activity, trend } = loaderData;
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
 
@@ -62,6 +69,8 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
   };
 
   const greeting = greetingForHour(new Date().getHours());
+
+  const trendMax = Math.max(...trend.map((d) => d.count), 1);
 
   return (
     <section>
@@ -108,8 +117,8 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
         )}
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 lg:col-span-1">
           <p className="text-sm text-[var(--muted)]">Role Distribution</p>
           <div className="mt-4 grid gap-3">
             {Object.entries(roleCounts).map(([role, count]) => {
@@ -138,7 +147,51 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 lg:col-span-1">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--muted)]">Activity Trend</p>
+            <span className="text-xs text-[var(--muted)]">Last 7 days</span>
+          </div>
+          {isLoading ? (
+            <div className="mt-4 flex items-end gap-1.5" style={{ height: "64px" }}>
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div
+                  aria-hidden="true"
+                  className="flex-1 animate-pulse rounded-sm bg-[var(--overlay)]"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholders
+                  key={i}
+                  style={{ height: "40px" }}
+                />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 flex items-end gap-1.5" style={{ height: "64px" }}>
+                {trend.map(({ day, count }) => {
+                  const barHeight = Math.max(4, Math.round((count / trendMax) * 60));
+                  return (
+                    <div key={day} className="flex flex-1 flex-col items-center justify-end">
+                      <div
+                        className="progress-fill w-full rounded-sm bg-[var(--accent)]"
+                        style={{ height: `${barHeight}px` }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-1.5 flex gap-1.5">
+                {trend.map(({ day, label, count }) => (
+                  <div key={day} className="flex flex-1 flex-col items-center">
+                    <span className="text-[10px] text-[var(--muted)]">{label}</span>
+                    <span className="text-[10px] font-medium tabular-nums">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </article>
+
+        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 lg:col-span-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--muted)]">Recent Activity</p>
             <Link className="text-xs text-[var(--accent)] hover:underline" to="/activity">

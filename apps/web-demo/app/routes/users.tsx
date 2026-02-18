@@ -1,5 +1,5 @@
 import {
-  createDemoUser,
+  createDemoInvite,
   getDemoUserById,
   listDemoUsers,
   updateDemoUserRole,
@@ -24,15 +24,13 @@ import {
   recordAuditEvent,
   requireAuthSession,
 } from "~/lib/demo-state.server";
-import { demoServerEnv } from "~/lib/env.server";
 import {
-  createUserInputSchema,
   type DemoUser,
+  inviteUserInputSchema,
   type Role,
   toRole,
   usersActionSchema,
 } from "~/lib/models";
-import { hashBootstrapPassword } from "~/lib/password.server";
 import { errorPayload } from "~/lib/server-responses";
 import type { Route } from "./+types/users";
 
@@ -133,33 +131,44 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  if (parsed.data.intent === "createUser") {
-    const parsedUser = createUserInputSchema.safeParse(parsed.data);
-    if (!parsedUser.success) {
+  if (parsed.data.intent === "inviteUser") {
+    const parsedInvite = inviteUserInputSchema.safeParse(parsed.data);
+    if (!parsedInvite.success) {
       return errorPayload(
         "BAD_REQUEST",
-        parsedUser.error.issues[0]?.message ?? "Invalid user payload.",
+        parsedInvite.error.issues[0]?.message ?? "Invalid invite payload.",
       );
     }
 
-    assertCanCreateUser(session.user, parsedUser.data.role);
+    assertCanCreateUser(session.user, parsedInvite.data.role);
 
-    const created = await createDemoUser({
-      ...parsedUser.data,
-      passwordHash: hashBootstrapPassword(demoServerEnv.AUTH_DEMO_PASSWORD),
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
+    const token = crypto.randomUUID().replaceAll("-", "");
+    const invite = await createDemoInvite({
+      email: parsedInvite.data.email,
+      role: parsedInvite.data.role,
+      token,
+      expiresAt,
     });
-    if (!created) {
-      return errorPayload("BAD_REQUEST", "A user with this email already exists.");
+    if (!invite) {
+      return errorPayload("INTERNAL_ERROR", "Unable to generate invite.");
     }
 
     await recordAuditEvent({
       actorId: session.user.id,
-      action: "Created",
-      target: `user ${created.email}`,
-      details: `${session.user.name} created ${created.email}`,
+      action: "Invited",
+      target: `user ${invite.email}`,
+      details: `${session.user.name} generated invite for ${invite.email} (${invite.role})`,
     });
 
-    return { ok: true, message: "User created successfully.", intent: "createUser" as const };
+    const inviteUrl = new URL(`/invite/${invite.token}`, request.url).toString();
+    return {
+      ok: true,
+      message: "Invite link generated.",
+      inviteUrl,
+      inviteExpiresAt: invite.expiresAt.toISOString(),
+      intent: "inviteUser" as const,
+    };
   }
 
   const current = await getDemoUserById(parsed.data.userId);
@@ -208,9 +217,10 @@ export async function action({ request }: Route.ActionArgs) {
 export default function UsersRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { users } = loaderData;
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("viewer");
+  const [latestInviteUrl, setLatestInviteUrl] = useState("");
+  const [latestInviteExpiresAt, setLatestInviteExpiresAt] = useState("");
   const [search, setSearch] = useState("");
   const [sortColumn, setSortColumn] = useState<SortColumn>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -226,15 +236,26 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
     if (!actionData) return;
     if ("ok" in actionData && actionData.ok) {
       addToast(actionData.message, "success");
-      if (actionData.intent === "createUser") {
-        setName("");
+      if (actionData.intent === "inviteUser") {
         setEmail("");
         setRole("viewer");
+        setLatestInviteUrl(actionData.inviteUrl);
+        setLatestInviteExpiresAt(actionData.inviteExpiresAt);
       }
     } else if ("error" in actionData) {
       addToast(actionData.error.message, "error");
     }
   }, [actionData, addToast]);
+
+  async function copyInviteLink() {
+    if (!latestInviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(latestInviteUrl);
+      addToast("Invite link copied to clipboard.", "info");
+    } catch {
+      addToast("Unable to copy invite link.", "warning");
+    }
+  }
 
   function handleSort(col: SortColumn) {
     if (sortColumn === col) {
@@ -314,14 +335,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Invite User</p>
           <Form className="mt-3 grid gap-3" method="post">
-            <input name="intent" type="hidden" value="createUser" />
-            <InputField
-              label="Name"
-              name="name"
-              onChange={(event) => setName((event.target as HTMLInputElement).value)}
-              placeholder="Jordan Lee"
-              value={name}
-            />
+            <input name="intent" type="hidden" value="inviteUser" />
             <InputField
               label="Email"
               name="email"
@@ -338,9 +352,34 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
               value={role}
             />
             <Button disabled={isSubmitting} type="submit">
-              Create Account
+              Generate Invite Link
             </Button>
           </Form>
+
+          {latestInviteUrl ? (
+            <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--overlay-soft)] p-3">
+              <p className="text-xs tracking-[0.15em] text-[var(--muted)] uppercase">
+                Latest Invite
+              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Expires: {new Date(latestInviteExpiresAt).toLocaleString("en-US")}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--muted)]"
+                  readOnly
+                  value={latestInviteUrl}
+                />
+                <button
+                  className="nav-transition rounded-lg border border-[var(--border)] px-3 py-2 text-xs hover:bg-[var(--surface)]"
+                  onClick={copyInviteLink}
+                  type="button"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          ) : null}
         </article>
 
         <div className="grid gap-3">
@@ -360,7 +399,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
           {sortedUsers.length === 0 && !isLoading ? (
             <EmptyState
               description={
-                search ? "Try a different search term." : "Create a user to get started."
+                search ? "Try a different search term." : "Generate an invite link to get started."
               }
               title={search ? "No users match your search" : "No users yet"}
             />

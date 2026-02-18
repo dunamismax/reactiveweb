@@ -4,7 +4,7 @@
 
 - Host many React apps in one clean monorepo.
 - Keep app-level autonomy while sharing stable building blocks.
-- Use Bun-native workflows for speed and consistency.
+- Use Node.js + pnpm workflows for speed and consistency.
 
 ## Standards
 
@@ -35,7 +35,8 @@
 ## web-demo Local Startup
 
 ```bash
-bun install
+corepack enable
+pnpm install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -48,6 +49,6 @@ export DATABASE_URL="postgres://postgres:postgres@localhost:55432/reactiveweb"
 export AUTH_SECRET="replace-with-16+-char-secret"
 export AUTH_DEMO_PASSWORD="replace-with-demo-password"
 export VITE_DEMO_ADMIN_EMAIL="admin@reactiveweb.dev"
-bun run demo:bootstrap
-bun run dev
+pnpm run demo:bootstrap
+pnpm run dev
 ```

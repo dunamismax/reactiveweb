@@ -1,16 +1,11 @@
-import { listRecentDemoActivity } from "@reactiveweb/db";
-import { useMemo, useState } from "react";
-import { useNavigation } from "react-router";
+import { Form, Link, useNavigation, useSearchParams } from "react-router";
 import { Avatar } from "~/components/avatar";
 import { Badge } from "~/components/badge";
 import { EmptyState } from "~/components/empty-state";
 import { SectionHeader } from "~/components/section-header";
 import { Skeleton } from "~/components/skeleton";
-import {
-  ensureDemoSeeded,
-  mapDbActivityToEvent,
-  requireAuthSession,
-} from "~/lib/demo-state.server";
+import { ensureDemoSeeded, listActivity, requireAuthSession } from "~/lib/demo-state.server";
+import { activityQuerySchema } from "~/lib/models";
 import type { Route } from "./+types/activity";
 
 function formatActivityTime(iso: string) {
@@ -22,7 +17,7 @@ function formatActivityTime(iso: string) {
   }).format(new Date(iso));
 }
 
-const actionFilters = ["All", "Created", "Updated", "Activated", "Suspended"] as const;
+const ACTION_FILTERS = ["All", "Created", "Updated", "Activated", "Suspended"] as const;
 
 type ActionBadgeVariant = "default" | "active" | "suspended" | "editor" | "admin";
 
@@ -39,22 +34,68 @@ export async function loader({ request }: Route.LoaderArgs) {
   await requireAuthSession(request);
   await ensureDemoSeeded();
 
-  const activity = await listRecentDemoActivity(50);
+  const url = new URL(request.url);
+  const rawParams = Object.fromEntries(url.searchParams.entries());
+  const parsed = activityQuerySchema.safeParse(rawParams);
+
+  const query = parsed.success ? parsed.data : activityQuerySchema.parse({});
+  const { page, pageSize, action, actor, from, to, q } = query;
+
+  const fromDate = from ? new Date(from) : undefined;
+  const toDate = to ? new Date(to) : undefined;
+
+  const result = await listActivity({
+    page,
+    pageSize,
+    action: action && action !== "All" ? action : undefined,
+    actorName: actor,
+    from: fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined,
+    to: toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined,
+    q,
+  });
+
   return {
-    activity: activity.map(mapDbActivityToEvent),
+    activity: result.rows,
+    total: result.total,
+    page,
+    pageSize,
+    query,
   };
 }
 
 export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
-  const { activity } = loaderData;
-  const [filter, setFilter] = useState<string>("All");
+  const { activity, total, page, pageSize, query } = loaderData;
+  const [searchParams] = useSearchParams();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
 
-  const filtered = useMemo(() => {
-    if (filter === "All") return activity;
-    return activity.filter((e) => e.action.toLowerCase() === filter.toLowerCase());
-  }, [activity, filter]);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentAction = query.action ?? "All";
+  const currentQ = query.q ?? "";
+
+  function buildFilterUrl(action: string) {
+    const params = new URLSearchParams(searchParams);
+    if (action === "All") {
+      params.delete("action");
+    } else {
+      params.set("action", action);
+    }
+    params.delete("page");
+    const qs = params.toString();
+    return qs ? `?${qs}` : "?";
+  }
+
+  function buildPageUrl(p: number) {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(p));
+    return `?${params.toString()}`;
+  }
+
+  function buildExportUrl() {
+    const params = new URLSearchParams(searchParams);
+    const qs = params.toString();
+    return qs ? `/activity/export.csv?${qs}` : "/activity/export.csv";
+  }
 
   return (
     <section>
@@ -65,23 +106,55 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
       />
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        {actionFilters.map((f) => (
-          <button
+        {ACTION_FILTERS.map((f) => (
+          <Link
             className={`nav-transition rounded-lg px-3 py-1.5 text-sm font-medium ${
-              filter === f
+              currentAction === f
                 ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
                 : "border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
             }`}
             key={f}
-            onClick={() => setFilter(f)}
-            type="button"
+            to={buildFilterUrl(f)}
           >
             {f}
-          </button>
+          </Link>
         ))}
+        <Link
+          className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+          to={buildExportUrl()}
+        >
+          Download CSV
+        </Link>
         <span className="ml-auto text-sm text-[var(--muted)]">
-          {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+          {total} event{total !== 1 ? "s" : ""}
         </span>
+      </div>
+
+      <div className="mt-3">
+        <Form className="flex items-center gap-2" method="get">
+          {currentAction !== "All" && <input name="action" type="hidden" value={currentAction} />}
+          <input
+            className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            defaultValue={currentQ}
+            name="q"
+            placeholder="Search events…"
+            type="search"
+          />
+          <button
+            className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+            type="submit"
+          >
+            Search
+          </button>
+          {currentQ && (
+            <Link
+              className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+              to={buildFilterUrl(currentAction)}
+            >
+              Clear
+            </Link>
+          )}
+        </Form>
       </div>
 
       <div className="mt-4">
@@ -102,18 +175,18 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : activity.length === 0 ? (
           <EmptyState
             description={
-              filter !== "All"
-                ? `No "${filter}" events found. Try a different filter.`
+              currentAction !== "All" || currentQ
+                ? "No events match your filters. Try adjusting the search or filter."
                 : "Events will appear here as workspace actions are performed."
             }
             title="No activity to display"
           />
         ) : (
           <div className="grid gap-3">
-            {filtered.map((event) => (
+            {activity.map((event) => (
               <article
                 className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
                 key={event.id}
@@ -134,6 +207,40 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          {page > 1 ? (
+            <Link
+              className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+              to={buildPageUrl(page - 1)}
+            >
+              ← Prev
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm opacity-40">
+              ← Prev
+            </span>
+          )}
+
+          <span className="text-sm text-[var(--muted)]">
+            Page {page} of {totalPages}
+          </span>
+
+          {page < totalPages ? (
+            <Link
+              className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+              to={buildPageUrl(page + 1)}
+            >
+              Next →
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm opacity-40">
+              Next →
+            </span>
+          )}
+        </div>
+      )}
     </section>
   );
 }

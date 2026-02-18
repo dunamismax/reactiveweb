@@ -30,7 +30,6 @@ function runCommand(args: string[]) {
 
 async function main() {
   await runCommand(["--filter", "@reactiveweb/db", "run", "db:migrate"]);
-  await runCommand(["run", "demo:seed"]);
 }
 
 main().catch((error) => {

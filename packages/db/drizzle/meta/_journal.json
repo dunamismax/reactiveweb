@@ -15,6 +15,20 @@
       "when": 1740000000001,
       "tag": "0001_demo_user_password_hash",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740010000000,
+      "tag": "0002_demo_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740010000001,
+      "tag": "0003_demo_invite_token_hash",
+      "breakpoints": true
     }
   ]
 }

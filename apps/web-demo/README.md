@@ -14,11 +14,11 @@ Flagship ReactiveWeb app that demonstrates the full stack contract in one place:
 From repository root:
 
 ```bash
-bun run demo:bootstrap
-bun run dev
-bun run test:web-demo
-bun run build
-bun run typecheck
+pnpm run demo:bootstrap
+pnpm run dev
+pnpm run test:web-demo
+pnpm run build
+pnpm run typecheck
 ```
 
 ## Required Environment
@@ -54,7 +54,7 @@ docker run -d \
 ## Deterministic Local Bootstrap
 
 ```bash
-bun run demo:bootstrap
+pnpm run demo:bootstrap
 ```
 
 What it does:

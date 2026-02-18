@@ -3,23 +3,23 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.30.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "bun run scripts/cli.ts dev web-demo",
-    "dev:template": "bun run scripts/cli.ts dev web-template",
-    "dev:app": "bun run scripts/cli.ts dev",
-    "db:migrate": "bun run --cwd packages/db db:migrate",
-    "demo:seed": "bun run scripts/web-demo-seed.ts",
-    "demo:bootstrap": "bun run scripts/web-demo-bootstrap.ts",
-    "build": "bun run scripts/cli.ts build all",
-    "typecheck": "bun run scripts/cli.ts typecheck all",
-    "lint": "bunx @biomejs/biome check .",
-    "format": "bunx @biomejs/biome check --write .",
-    "apps:list": "bun run scripts/cli.ts list",
-    "test:web-demo": "bun test apps/web-demo/tests"
+    "dev": "node --experimental-strip-types scripts/cli.ts dev web-demo",
+    "dev:template": "node --experimental-strip-types scripts/cli.ts dev web-template",
+    "dev:app": "node --experimental-strip-types scripts/cli.ts dev",
+    "db:migrate": "node --experimental-strip-types scripts/db-migrate.ts",
+    "demo:seed": "node --experimental-strip-types scripts/web-demo-seed.ts",
+    "demo:bootstrap": "node --experimental-strip-types scripts/web-demo-bootstrap.ts",
+    "build": "node --experimental-strip-types scripts/cli.ts build all",
+    "typecheck": "node --experimental-strip-types scripts/cli.ts typecheck all",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "apps:list": "node --experimental-strip-types scripts/cli.ts list",
+    "test:web-demo": "node --experimental-strip-types scripts/cli.ts test web-demo"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",

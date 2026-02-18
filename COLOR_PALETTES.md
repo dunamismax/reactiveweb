@@ -50,7 +50,7 @@ This prevents non-token contexts from drifting off-theme.
 
 1. Apply tokens + gradients in `apps/web-demo/app/app.css`.
 2. Update `COLOR_PALETTES.md` status for that palette (e.g., `Adopted`, `Favorite`, `Least Favorite`, ranking).
-3. Run `bun run lint`.
+3. Run `pnpm run lint`.
 4. Keep dev server running and iterate via live review.
 
 ### Ranking/Status Convention

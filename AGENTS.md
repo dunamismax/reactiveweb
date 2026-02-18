@@ -26,7 +26,7 @@ Read `SOUL.md` first, then this file, then `README.md`.
 
 Do not deviate from this stack unless Stephen explicitly approves:
 
-- Runtime + package manager + task runner: **Bun** (`bun`, `bunx`)
+- Runtime + package manager + task runner: **Node.js 22+ + pnpm**
 - App framework: **Vite + React Router (framework mode, SPA-first)**
 - UI runtime: **React 19 + TypeScript**
 - Styling/components: **Tailwind CSS + shadcn/ui patterns**
@@ -38,7 +38,7 @@ Do not deviate from this stack unless Stephen explicitly approves:
 
 ### Disallowed by default
 
-- No npm/pnpm/yarn scripts.
+- No `npm` or `yarn` scripts.
 - No ESLint/Prettier migration unless explicitly requested.
 - No SSR-by-default app setup in this repo.
 
@@ -52,7 +52,7 @@ Do not deviate from this stack unless Stephen explicitly approves:
 - `packages/ui` shared UI package
 - `packages/db` shared Drizzle/Postgres package
 - `packages/config` shared zod/env package
-- `scripts/` Bun TypeScript orchestration scripts
+- `scripts/` TypeScript orchestration scripts
 - `docs/` architecture and operational docs
 
 ---
@@ -81,37 +81,37 @@ Do not deviate from this stack unless Stephen explicitly approves:
 - Make small visual/function changes, then hand off quickly for in-browser review.
 - Apply feedback immediately and continue in short iteration cycles.
 - Restart the dev server only when required (config/runtime/env changes), not for routine UI edits.
-- Keep verification proportional during iteration (`bun run lint` minimum), then run full gates before final sign-off.
+- Keep verification proportional during iteration (`pnpm run lint` minimum), then run full gates before final sign-off.
 
 ---
 
 ## Command Policy
 
-Use Bun for all repository operations.
+Use pnpm for all repository operations.
 
 ### Canonical commands
 
 ```bash
-bun install
-bun run apps:list
-bun run dev
-bun run dev:template
-bun run dev:app <app-name>
-bun run db:migrate
-bun run demo:seed
-bun run demo:bootstrap
-bun run build
-bun run typecheck
-bun run lint
-bun run format
-bun run test:web-demo
+pnpm install
+pnpm run apps:list
+pnpm run dev
+pnpm run dev:template
+pnpm run dev:app <app-name>
+pnpm run db:migrate
+pnpm run demo:seed
+pnpm run demo:bootstrap
+pnpm run build
+pnpm run typecheck
+pnpm run lint
+pnpm run format
+pnpm run test:web-demo
 ```
 
 ### App orchestration
 
 - `scripts/cli.ts` is the workspace command entrypoint.
-- `bun run scripts/cli.ts list` discovers apps in `apps/`.
-- `bun run scripts/cli.ts <dev|build|typecheck> <app|all>` is the execution contract.
+- `node --experimental-strip-types scripts/cli.ts list` discovers apps in `apps/`.
+- `node --experimental-strip-types scripts/cli.ts <dev|build|typecheck> <app|all>` is the execution contract.
 
 ---
 
@@ -121,10 +121,10 @@ A task is done only when all are true:
 
 - Requirements are implemented.
 - Relevant checks were run and reported.
-- `bun run lint` passes.
-- `bun run typecheck` passes.
-- `bun run build` passes when build-impacting changes exist.
-- `bun run test:web-demo` passes for `apps/web-demo` behavior/auth/data changes.
+- `pnpm run lint` passes.
+- `pnpm run typecheck` passes.
+- `pnpm run build` passes when build-impacting changes exist.
+- `pnpm run test:web-demo` passes for `apps/web-demo` behavior/auth/data changes.
 - Docs are aligned with behavior changes.
 
 ---

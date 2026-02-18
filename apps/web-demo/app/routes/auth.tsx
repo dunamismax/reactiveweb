@@ -93,6 +93,10 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
       return { message: "Session cleared.", isError: false };
     }
 
+    if (status === "invite-accepted") {
+      return { message: "Invite accepted. Sign in with your new password.", isError: false };
+    }
+
     return null;
   }, [actionData, searchParams]);
 

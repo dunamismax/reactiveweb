@@ -1,107 +1,252 @@
-import { getDemoUserCount, listDemoUsers } from "@reactiveweb/db";
+import { getDemoUserById, updateDemoUserName, updateDemoUserPassword } from "@reactiveweb/db";
+import { Button } from "@reactiveweb/ui";
+import { useEffect, useMemo, useState } from "react";
+import { Form, useNavigation } from "react-router";
 import { DataList } from "~/components/data-list";
+import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
-import { ensureDemoSeeded, requireAuthSession } from "~/lib/demo-state.server";
-import { demoEnv } from "~/lib/env";
-import { demoServerEnv } from "~/lib/env.server";
+import { useToast } from "~/components/toast";
+import { recordAuditEvent, requireAuthSession } from "~/lib/demo-state.server";
+import { settingsActionSchema } from "~/lib/models";
+import { hashPassword, verifyPassword } from "~/lib/password.server";
+import { errorPayload, throwRouteError } from "~/lib/server-responses";
 import type { Route } from "./+types/settings";
+
+function formatTimestamp(value: Date | string | null) {
+  if (!value) return "Never";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await requireAuthSession(request);
-  await ensureDemoSeeded();
+  const dbUser = await getDemoUserById(session.user.id);
 
-  const [userCount, users] = await Promise.all([getDemoUserCount(), listDemoUsers()]);
-
-  const roleSummary = users.reduce(
-    (acc, u) => {
-      acc[u.role] = (acc[u.role] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  const activeCount = users.filter((u) => u.active).length;
+  if (!dbUser) {
+    throwRouteError(401, "UNAUTHORIZED", "Session user no longer exists.");
+  }
 
   return {
-    currentUser: session.user,
-    userCount,
-    activeCount,
-    roleSummary,
-    dbConfigured: Boolean(demoServerEnv.DATABASE_URL),
+    profile: {
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      role: dbUser.role,
+      lastSeenAt: dbUser.lastSeenAt ? dbUser.lastSeenAt.toISOString() : null,
+    },
   };
 }
 
-export default function SettingsRoute({ loaderData }: Route.ComponentProps) {
-  const { currentUser, userCount, activeCount, roleSummary, dbConfigured } = loaderData;
+export async function action({ request }: Route.ActionArgs) {
+  const session = await requireAuthSession(request);
+  const dbUser = await getDemoUserById(session.user.id);
+
+  if (!dbUser) {
+    return errorPayload("UNAUTHORIZED", "Session user no longer exists.");
+  }
+
+  const formData = await request.formData();
+  const rawInput = Object.fromEntries(formData.entries());
+  const parsed = settingsActionSchema.safeParse(rawInput);
+
+  if (!parsed.success) {
+    return errorPayload(
+      "BAD_REQUEST",
+      parsed.error.issues[0]?.message ?? "Invalid settings payload.",
+    );
+  }
+
+  if (parsed.data.intent === "updateProfile") {
+    const updated = await updateDemoUserName({
+      userId: session.user.id,
+      name: parsed.data.name,
+    });
+
+    if (!updated) {
+      return errorPayload("NOT_FOUND", "User account not found.");
+    }
+
+    await recordAuditEvent({
+      actorId: session.user.id,
+      action: "Updated",
+      target: `${dbUser.email} profile`,
+      details: `${session.user.name} changed display name to ${parsed.data.name}`,
+    });
+
+    return {
+      ok: true,
+      intent: "updateProfile" as const,
+      message: "Profile updated.",
+    };
+  }
+
+  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
+    return errorPayload("BAD_REQUEST", "New password confirmation does not match.");
+  }
+
+  if (!dbUser.passwordHash || !verifyPassword(parsed.data.currentPassword, dbUser.passwordHash)) {
+    return errorPayload("FORBIDDEN", "Current password is incorrect.");
+  }
+
+  if (parsed.data.currentPassword === parsed.data.newPassword) {
+    return errorPayload("BAD_REQUEST", "New password must be different from current password.");
+  }
+
+  const updatedPassword = await updateDemoUserPassword({
+    userId: session.user.id,
+    passwordHash: hashPassword(parsed.data.newPassword),
+  });
+
+  if (!updatedPassword) {
+    return errorPayload("NOT_FOUND", "User account not found.");
+  }
+
+  await recordAuditEvent({
+    actorId: session.user.id,
+    action: "Updated",
+    target: `${dbUser.email} password`,
+    details: `${session.user.name} changed account password`,
+  });
+
+  return {
+    ok: true,
+    intent: "changePassword" as const,
+    message: "Password updated.",
+  };
+}
+
+export default function SettingsRoute({ actionData, loaderData }: Route.ComponentProps) {
+  const navigation = useNavigation();
+  const { addToast } = useToast();
+  const [name, setName] = useState(loaderData.profile.name);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    setName(loaderData.profile.name);
+  }, [loaderData.profile.name]);
+
+  useEffect(() => {
+    if (!actionData) return;
+
+    if ("ok" in actionData && actionData.ok) {
+      addToast(actionData.message, "success");
+      if (actionData.intent === "changePassword") {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+      return;
+    }
+
+    if ("error" in actionData) {
+      addToast(actionData.error.message, "error");
+    }
+  }, [actionData, addToast]);
+
+  const optimisticName = useMemo(() => {
+    if (
+      navigation.state === "submitting" &&
+      navigation.formData?.get("intent") === "updateProfile" &&
+      typeof navigation.formData?.get("name") === "string"
+    ) {
+      return String(navigation.formData.get("name"));
+    }
+
+    return loaderData.profile.name;
+  }, [navigation.formData, navigation.state, loaderData.profile.name]);
+
+  const isSubmittingProfile =
+    navigation.state === "submitting" && navigation.formData?.get("intent") === "updateProfile";
+
+  const isSubmittingPassword =
+    navigation.state === "submitting" && navigation.formData?.get("intent") === "changePassword";
 
   return (
     <section>
       <SectionHeader
         caption="Settings"
-        description="Workspace configuration and environment overview. Read-only showcase of the validated config layer."
-        title="Workspace Settings"
+        description="Manage your profile details and account credentials."
+        title="User Settings"
       />
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-sm font-medium">Current Session</p>
+          <p className="text-sm font-medium">Profile</p>
           <div className="mt-3">
             <DataList
               items={[
-                { label: "Name", value: currentUser.name },
-                { label: "Role", value: currentUser.role },
-                { label: "User ID", value: `${currentUser.id.slice(0, 8)}...` },
+                { label: "Name", value: optimisticName },
+                { label: "Email", value: loaderData.profile.email },
+                { label: "Role", value: loaderData.profile.role },
+                { label: "Last Seen", value: formatTimestamp(loaderData.profile.lastSeenAt) },
               ]}
             />
           </div>
+
+          <Form className="mt-4 grid gap-3" method="post">
+            <input name="intent" type="hidden" value="updateProfile" />
+            <InputField
+              label="Display Name"
+              name="name"
+              onChange={(event) => setName((event.target as HTMLInputElement).value)}
+              required
+              value={name}
+            />
+            <Button disabled={isSubmittingProfile} type="submit">
+              Save Name
+            </Button>
+          </Form>
         </article>
 
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-sm font-medium">Workspace Overview</p>
-          <div className="mt-3">
-            <DataList
-              items={[
-                { label: "Total Users", value: String(userCount) },
-                { label: "Active Users", value: String(activeCount) },
-                {
-                  label: "Role Breakdown",
-                  value: Object.entries(roleSummary)
-                    .map(([role, count]) => `${count} ${role}`)
-                    .join(", "),
-                },
-              ]}
-            />
-          </div>
-        </article>
+          <p className="text-sm font-medium">Password</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Change your account password. Minimum length is 8 characters.
+          </p>
 
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-sm font-medium">Application Config</p>
-          <div className="mt-3">
-            <DataList
-              items={[
-                { label: "App Name", value: demoEnv.VITE_APP_NAME },
-                { label: "Environment", value: demoEnv.NODE_ENV },
-                { label: "Auth Demo", value: String(demoEnv.VITE_ENABLE_AUTH_DEMO) },
-                { label: "Database", value: dbConfigured ? "connected" : "not configured" },
-              ]}
+          <Form className="mt-4 grid gap-3" method="post">
+            <input name="intent" type="hidden" value="changePassword" />
+            <InputField
+              autoComplete="current-password"
+              label="Current Password"
+              name="currentPassword"
+              onChange={(event) => setCurrentPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={currentPassword}
             />
-          </div>
-        </article>
-
-        <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-sm font-medium">Stack Contract</p>
-          <div className="mt-3">
-            <DataList
-              items={[
-                { label: "Runtime", value: "Bun" },
-                { label: "Framework", value: "Vite + React Router" },
-                { label: "UI", value: "Tailwind CSS + shadcn patterns" },
-                { label: "ORM", value: "Drizzle" },
-                { label: "Validation", value: "Zod" },
-                { label: "Auth", value: "Auth.js" },
-              ]}
+            <InputField
+              autoComplete="new-password"
+              label="New Password"
+              minLength={8}
+              name="newPassword"
+              onChange={(event) => setNewPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={newPassword}
             />
-          </div>
+            <InputField
+              autoComplete="new-password"
+              label="Confirm Password"
+              minLength={8}
+              name="confirmPassword"
+              onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={confirmPassword}
+            />
+            <Button disabled={isSubmittingPassword} type="submit">
+              Update Password
+            </Button>
+          </Form>
         </article>
       </div>
     </section>

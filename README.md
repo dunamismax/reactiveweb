@@ -1,10 +1,10 @@
 # reactiveweb
 
-Monorepo for Stephen Sawyer's React projects and apps, built on Bun and a shared TypeScript-first stack.
+Monorepo for Stephen Sawyer's React projects and apps, built on Node.js + pnpm and a shared TypeScript-first stack.
 
 ## Stack
 
-- Bun + Bun workspaces
+- Node.js 22+ + pnpm workspaces
 - Vite + React Router (framework mode, SPA-first)
 - React 19 + TypeScript
 - Tailwind CSS + shadcn/ui patterns
@@ -27,7 +27,8 @@ Monorepo for Stephen Sawyer's React projects and apps, built on Bun and a shared
 ## Quick Start
 
 ```bash
-bun install
+corepack enable
+pnpm install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -38,8 +39,8 @@ docker run -d \
   postgres:16-alpine
 cp .env.example .env
 set -a; source .env; set +a
-bun run demo:bootstrap
-bun run dev
+pnpm run demo:bootstrap
+pnpm run dev
 ```
 
 `AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `web-demo` stores and verifies per-user password hashes in Postgres.
@@ -49,27 +50,27 @@ bun run dev
 
 ```bash
 # list all apps
-bun run apps:list
+pnpm run apps:list
 
 # run flagship demo app
-bun run dev
+pnpm run dev
 
 # run reusable starter template app
-bun run dev:template
+pnpm run dev:template
 
 # run a specific app
-bun run dev:app web-template
+pnpm run dev:app web-template
 
 # database bootstrap helpers for web-demo
-bun run db:migrate
-bun run demo:seed
-bun run demo:bootstrap
+pnpm run db:migrate
+pnpm run demo:seed
+pnpm run demo:bootstrap
 
 # quality checks
-bun run lint
-bun run typecheck
-bun run build
-bun run test:web-demo
+pnpm run lint
+pnpm run typecheck
+pnpm run build
+pnpm run test:web-demo
 ```
 
 ## Starter Apps
