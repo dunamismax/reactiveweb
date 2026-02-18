@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run scripts/cli.ts dev web-sample",
+    "dev": "bun run scripts/cli.ts dev web-demo",
     "dev:template": "bun run scripts/cli.ts dev web-template",
     "dev:app": "bun run scripts/cli.ts dev",
     "build": "bun run scripts/cli.ts build all",

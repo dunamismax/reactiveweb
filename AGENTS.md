@@ -47,7 +47,7 @@ Do not deviate from this stack unless Stephen explicitly approves:
 ## Repository Layout
 
 - `apps/` multi-app workspace
-- `apps/web-sample` showcase sample app
+- `apps/web-demo` flagship showcase demo app
 - `apps/web-template` reusable starter baseline
 - `packages/ui` shared UI package
 - `packages/db` shared Drizzle/Postgres package

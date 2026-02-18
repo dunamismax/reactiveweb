@@ -17,7 +17,7 @@ export function Hero() {
         One monorepo for every React product you ship.
       </h1>
       <p className="mt-6 max-w-2xl text-lg leading-relaxed text-neutral-700">
-        This sample app is the first app slot inside your new platform repo. Build future apps in
+        This template app is the first reusable slot inside your platform repo. Build future apps in
         <code className="mx-1 rounded bg-neutral-200 px-2 py-1 text-sm">apps/</code>, share code in{" "}
         <code className="mx-1 rounded bg-neutral-200 px-2 py-1 text-sm">packages/</code>, keep
         orchestration in{" "}

@@ -16,6 +16,7 @@ Monorepo for Stephen's React projects and apps, built on Bun and a shared TypeSc
 ## Repo Layout
 
 - `apps/` application projects
+- `apps/web-demo` flagship stack showcase app
 - `apps/web-template` reusable starter for future apps
 - `packages/ui` shared React UI primitives (shadcn-style)
 - `packages/db` shared Drizzle schema/config baseline
@@ -37,7 +38,7 @@ bun run dev
 # list all apps
 bun run apps:list
 
-# run sample app
+# run flagship demo app
 bun run dev
 
 # run reusable starter template app
@@ -53,5 +54,5 @@ bun run typecheck
 
 ## Starter Apps
 
-- `apps/web-sample`: example showcase app
+- `apps/web-demo`: exemplar dashboard app covering auth, user flows, and stack integrations
 - `apps/web-template`: reusable baseline for cloning new apps
