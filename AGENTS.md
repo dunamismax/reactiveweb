@@ -79,10 +79,14 @@ bun run apps:list
 bun run dev
 bun run dev:template
 bun run dev:app <app-name>
+bun run db:migrate
+bun run demo:seed
+bun run demo:bootstrap
 bun run build
 bun run typecheck
 bun run lint
 bun run format
+bun run test:web-demo
 ```
 
 ### App orchestration
@@ -102,6 +106,7 @@ A task is done only when all are true:
 - `bun run lint` passes.
 - `bun run typecheck` passes.
 - `bun run build` passes when build-impacting changes exist.
+- `bun run test:web-demo` passes for `apps/web-demo` behavior/auth/data changes.
 - Docs are aligned with behavior changes.
 
 ---

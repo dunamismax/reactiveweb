@@ -16,7 +16,14 @@ export function sanitizeCallbackPath(
   input: FormDataEntryValue | null | undefined,
   fallback: string,
 ) {
-  if (typeof input !== "string") return fallback;
-  if (!input.startsWith("/") || input.startsWith("//")) return fallback;
-  return input;
+  if (typeof input !== "string" || input.length === 0) return fallback;
+
+  try {
+    const url = new URL(input, "http://reactiveweb.local");
+    if (url.origin !== "http://reactiveweb.local") return fallback;
+    if (!url.pathname.startsWith("/") || url.pathname.startsWith("//")) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }

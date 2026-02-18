@@ -12,7 +12,7 @@ async function runCommand(cmd: string[]) {
 }
 
 async function main() {
-  await runCommand(["bunx", "drizzle-kit", "migrate", "--config", "packages/db/drizzle.config.ts"]);
+  await runCommand(["bun", "run", "--cwd", "packages/db", "db:migrate"]);
   await runCommand(["bun", "run", "scripts/web-demo-seed.ts"]);
 }
 

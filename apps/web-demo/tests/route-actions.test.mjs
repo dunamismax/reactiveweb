@@ -176,10 +176,12 @@ describe("auth action", () => {
     await authRoute.action({
       request: buildPostRequest("/auth", {
         intent: "signOut",
-        callbackUrl: "/auth?status=signed-out",
+        callbackUrl: "https://evil.example.com/logout",
       }),
     });
 
     expect(authServer.forwardSignOut).toHaveBeenCalledTimes(1);
+    const call = authServer.forwardSignOut.mock.calls[0];
+    expect(call[1]).toBe("/auth?status=signed-out");
   });
 });

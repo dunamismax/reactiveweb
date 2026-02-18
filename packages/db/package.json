@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts"

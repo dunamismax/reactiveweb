@@ -1,6 +1,9 @@
-import { parseDemoServerEnv } from "@reactiveweb/config";
-import { ensureDemoWorkspaceSeed, fillMissingDemoUserPasswordHashes } from "@reactiveweb/db";
 import { hashBootstrapPassword } from "../apps/web-demo/app/lib/password.server";
+import { parseDemoServerEnv } from "../packages/config/src/index";
+import {
+  ensureDemoWorkspaceSeed,
+  fillMissingDemoUserPasswordHashes,
+} from "../packages/db/src/index";
 
 async function main() {
   const env = parseDemoServerEnv({

@@ -11,7 +11,7 @@
     "dev": "bun run scripts/cli.ts dev web-demo",
     "dev:template": "bun run scripts/cli.ts dev web-template",
     "dev:app": "bun run scripts/cli.ts dev",
-    "db:migrate": "bunx drizzle-kit migrate --config packages/db/drizzle.config.ts",
+    "db:migrate": "bun run --cwd packages/db db:migrate",
     "demo:seed": "bun run scripts/web-demo-seed.ts",
     "demo:bootstrap": "bun run scripts/web-demo-bootstrap.ts",
     "build": "bun run scripts/cli.ts build all",
