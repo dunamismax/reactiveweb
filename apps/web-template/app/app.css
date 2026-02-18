@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  --surface: #f6f5f0;
+  --surface-strong: #ebe9e2;
+  --text: #151515;
+  --muted: #545454;
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 15% 0%, #fffdf8 0%, transparent 45%),
+    radial-gradient(circle at 85% 100%, #efece2 0%, transparent 40%), var(--surface);
+  color: var(--text);
+  min-height: 100%;
+}

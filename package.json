@@ -1,0 +1,27 @@
+{
+  "name": "reactiveweb",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run scripts/cli.ts dev web-sample",
+    "dev:template": "bun run scripts/cli.ts dev web-template",
+    "dev:app": "bun run scripts/cli.ts dev",
+    "build": "bun run scripts/cli.ts build all",
+    "typecheck": "bun run scripts/cli.ts typecheck all",
+    "lint": "bunx @biomejs/biome check .",
+    "format": "bunx @biomejs/biome check --write .",
+    "apps:list": "bun run scripts/cli.ts list"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.2",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.2"
+  }
+}
