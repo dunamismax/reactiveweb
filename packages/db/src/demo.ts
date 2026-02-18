@@ -1,8 +1,8 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 
-import { db } from "./index";
-import { demoAuditLogs, demoInvites, demoUsers } from "./schema";
+import { db } from "./index.ts";
+import { demoAuditLogs, demoInvites, demoUsers } from "./schema/index.ts";
 
 const defaultWorkspaceUsers = [
   { name: "Stephen Sawyer", email: "stephen@reactiveweb.dev", role: "owner", active: true },

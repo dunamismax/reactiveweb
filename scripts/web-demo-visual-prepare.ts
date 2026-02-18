@@ -1,15 +1,15 @@
-import { hashBootstrapPassword } from "../apps/web-demo/app/lib/password.server";
+import { hashBootstrapPassword } from "../apps/web-demo/app/lib/password.server.ts";
 import {
   VISUAL_INVITE_EMAIL,
   VISUAL_INVITE_ROLE,
   VISUAL_INVITE_TOKEN,
-} from "../apps/web-demo/tests/visual/constants";
-import { parseDemoServerEnv } from "../packages/config/src/index";
+} from "../apps/web-demo/tests/visual/constants.ts";
+import { parseDemoServerEnv } from "../packages/config/src/index.ts";
 import {
   createDemoInvite,
   ensureDemoWorkspaceSeed,
   fillMissingDemoUserPasswordHashes,
-} from "../packages/db/src/index";
+} from "../packages/db/src/index.ts";
 
 const VISUAL_INVITE_EXPIRES_AT = new Date("2099-01-01T00:00:00.000Z");
 
@@ -41,6 +41,7 @@ async function main() {
   console.log(
     `web-demo visual fixtures ready: invite=/invite/${VISUAL_INVITE_TOKEN}, email=${VISUAL_INVITE_EMAIL}`,
   );
+  process.exit(0);
 }
 
 main().catch((error) => {

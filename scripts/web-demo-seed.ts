@@ -1,9 +1,9 @@
-import { hashBootstrapPassword } from "../apps/web-demo/app/lib/password.server";
-import { parseDemoServerEnv } from "../packages/config/src/index";
+import { hashBootstrapPassword } from "../apps/web-demo/app/lib/password.server.ts";
+import { parseDemoServerEnv } from "../packages/config/src/index.ts";
 import {
   ensureDemoWorkspaceSeed,
   fillMissingDemoUserPasswordHashes,
-} from "../packages/db/src/index";
+} from "../packages/db/src/index.ts";
 
 async function main() {
   const env = parseDemoServerEnv({
@@ -21,6 +21,7 @@ async function main() {
   console.log(
     `web-demo seed complete: admin=${env.VITE_DEMO_ADMIN_EMAIL}, backfilled_password_hashes=${backfilledCount}`,
   );
+  process.exit(0);
 }
 
 main().catch((error) => {
