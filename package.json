@@ -11,11 +11,15 @@
     "dev": "bun run scripts/cli.ts dev web-demo",
     "dev:template": "bun run scripts/cli.ts dev web-template",
     "dev:app": "bun run scripts/cli.ts dev",
+    "db:migrate": "bunx drizzle-kit migrate --config packages/db/drizzle.config.ts",
+    "demo:seed": "bun run scripts/web-demo-seed.ts",
+    "demo:bootstrap": "bun run scripts/web-demo-bootstrap.ts",
     "build": "bun run scripts/cli.ts build all",
     "typecheck": "bun run scripts/cli.ts typecheck all",
     "lint": "bunx @biomejs/biome check .",
     "format": "bunx @biomejs/biome check --write .",
-    "apps:list": "bun run scripts/cli.ts list"
+    "apps:list": "bun run scripts/cli.ts list",
+    "test:web-demo": "bun test apps/web-demo/tests"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",

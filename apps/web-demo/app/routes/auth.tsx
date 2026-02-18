@@ -1,33 +1,97 @@
 import { Button } from "@reactiveweb/ui";
-import { type FormEvent, useState } from "react";
+import { useMemo, useState } from "react";
+import { Form, useNavigation, useSearchParams } from "react-router";
+import { forwardSignIn, forwardSignOut, getAuthSession } from "~/lib/auth.server";
 
-import { demoAuthConfig, demoCredentialsHint } from "~/lib/auth-config";
-import { useDemoStore } from "~/lib/demo-store";
-import { demoEnv } from "~/lib/env";
+import { demoAuthUiConfig, sanitizeCallbackPath, validateSignInPayload } from "~/lib/auth-config";
+import { ensureDemoSeeded } from "~/lib/demo-state.server";
+import { demoServerEnv } from "~/lib/env.server";
+import { authActionSchema } from "~/lib/models";
+import { errorPayload } from "~/lib/server-responses";
+import type { Route } from "./+types/auth";
 
-export default function AuthRoute() {
-  const {
-    state: { authenticatedUserId },
-    currentUserName,
-    signIn,
-    signOut,
-  } = useDemoStore();
+export async function loader({ request }: Route.LoaderArgs) {
+  await ensureDemoSeeded();
+  const session = await getAuthSession(request);
 
-  const [email, setEmail] = useState(demoCredentialsHint.email);
-  const [password, setPassword] = useState(demoCredentialsHint.password);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  return {
+    authenticatedUserId: session?.user?.id ?? null,
+    currentUserName: session?.user?.name ?? "Visitor Session",
+    adminEmail: demoServerEnv.VITE_DEMO_ADMIN_EMAIL,
+    authEnabled: true,
+    sessionStrategy: demoAuthUiConfig.sessionStrategy,
+    signInRoute: demoAuthUiConfig.signInRoute,
+  };
+}
 
-  function handleSignIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = signIn({ email, password });
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const input = Object.fromEntries(formData.entries());
+  const parsed = authActionSchema.safeParse(input);
 
-    if (!result.ok) {
-      setFeedback(result.error ?? "Sign-in failed.");
-      return;
+  if (!parsed.success) {
+    return errorPayload("BAD_REQUEST", parsed.error.issues[0]?.message ?? "Invalid auth payload.");
+  }
+
+  if (parsed.data.intent === "signIn") {
+    const validated = validateSignInPayload(parsed.data);
+    if (!validated.success) {
+      return errorPayload("BAD_REQUEST", validated.error.issues[0]?.message ?? "Sign-in failed.");
     }
 
-    setFeedback("Session established.");
+    return forwardSignIn(
+      request,
+      validated.data.email,
+      validated.data.password,
+      sanitizeCallbackPath(formData.get("callbackUrl"), demoAuthUiConfig.signInCallbackPath),
+    );
   }
+
+  return forwardSignOut(
+    request,
+    sanitizeCallbackPath(formData.get("callbackUrl"), demoAuthUiConfig.signOutCallbackPath),
+  );
+}
+
+export default function AuthRoute({ loaderData, actionData }: Route.ComponentProps) {
+  const {
+    authenticatedUserId,
+    currentUserName,
+    adminEmail,
+    authEnabled,
+    sessionStrategy,
+    signInRoute,
+  } = loaderData;
+
+  const [email, setEmail] = useState(adminEmail);
+  const [password, setPassword] = useState("");
+  const [searchParams] = useSearchParams();
+
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+
+  const feedback = useMemo(() => {
+    if (actionData && !actionData.ok) {
+      return actionData.error.message ?? "Auth request failed.";
+    }
+
+    const status = searchParams.get("status");
+    const error = searchParams.get("error");
+
+    if (error) {
+      return "Sign-in failed. Check your credentials and try again.";
+    }
+
+    if (status === "signed-in") {
+      return "Session established.";
+    }
+
+    if (status === "signed-out") {
+      return "Session cleared.";
+    }
+
+    return null;
+  }, [actionData, searchParams]);
 
   return (
     <section>
@@ -42,11 +106,14 @@ export default function AuthRoute() {
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr]">
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Credentials Demo</p>
-          <form className="mt-3 grid gap-3" onSubmit={handleSignIn}>
+          <Form className="mt-3 grid gap-3" method="post">
+            <input name="intent" type="hidden" value="signIn" />
+            <input name="callbackUrl" type="hidden" value={demoAuthUiConfig.signInCallbackPath} />
             <label className="grid gap-1 text-sm">
               <span className="text-[var(--muted)]">Email</span>
               <input
                 className="rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 outline-none focus:border-[var(--accent)]"
+                name="email"
                 onChange={(event) => setEmail(event.target.value)}
                 type="email"
                 value={email}
@@ -56,18 +123,23 @@ export default function AuthRoute() {
               <span className="text-[var(--muted)]">Password</span>
               <input
                 className="rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 outline-none focus:border-[var(--accent)]"
+                name="password"
                 onChange={(event) => setPassword(event.target.value)}
                 type="password"
                 value={password}
               />
             </label>
-            <div className="flex gap-2">
-              <Button type="submit">Sign In</Button>
-              <Button onClick={signOut} type="button" variant="outline">
-                Sign Out
-              </Button>
-            </div>
-          </form>
+            <Button disabled={isSubmitting} type="submit">
+              Sign In
+            </Button>
+          </Form>
+          <Form className="mt-2" method="post">
+            <input name="intent" type="hidden" value="signOut" />
+            <input name="callbackUrl" type="hidden" value={demoAuthUiConfig.signOutCallbackPath} />
+            <Button disabled={isSubmitting} type="submit" variant="outline">
+              Sign Out
+            </Button>
+          </Form>
           {feedback ? <p className="mt-3 text-sm text-[var(--muted)]">{feedback}</p> : null}
         </article>
 
@@ -84,15 +156,19 @@ export default function AuthRoute() {
             </div>
             <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
               <dt className="text-[var(--muted)]">Session Strategy</dt>
-              <dd>{demoAuthConfig.session?.strategy}</dd>
+              <dd>{sessionStrategy}</dd>
             </div>
             <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
               <dt className="text-[var(--muted)]">Sign-in Route</dt>
-              <dd>{demoAuthConfig.pages?.signIn}</dd>
+              <dd>{signInRoute}</dd>
+            </div>
+            <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
+              <dt className="text-[var(--muted)]">Auth Demo Enabled</dt>
+              <dd>{String(authEnabled)}</dd>
             </div>
             <div className="flex justify-between gap-2">
               <dt className="text-[var(--muted)]">Demo Admin Email</dt>
-              <dd>{demoEnv.VITE_DEMO_ADMIN_EMAIL}</dd>
+              <dd>{adminEmail}</dd>
             </div>
           </dl>
         </article>

@@ -28,9 +28,15 @@ Monorepo for Stephen's React projects and apps, built on Bun and a shared TypeSc
 
 ```bash
 bun install
-bun run apps:list
+export DATABASE_URL="postgres://postgres:postgres@localhost:5432/reactiveweb"
+export AUTH_SECRET="replace-with-16+-char-secret"
+export AUTH_DEMO_PASSWORD="replace-with-demo-password"
+export VITE_DEMO_ADMIN_EMAIL="admin@reactiveweb.dev"
+bun run demo:bootstrap
 bun run dev
 ```
+
+`AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `web-demo` stores and verifies per-user password hashes in Postgres.
 
 ## Workspace Commands
 
@@ -47,12 +53,19 @@ bun run dev:template
 # run a specific app
 bun run dev:app web-template
 
+# database bootstrap helpers for web-demo
+bun run db:migrate
+bun run demo:seed
+bun run demo:bootstrap
+
 # quality checks
 bun run lint
 bun run typecheck
+bun run build
+bun run test:web-demo
 ```
 
 ## Starter Apps
 
-- `apps/web-demo`: exemplar dashboard app covering auth, user flows, and stack integrations
+- `apps/web-demo`: exemplar dashboard app covering Auth.js + Postgres-backed sessions/users/audit flows
 - `apps/web-template`: reusable baseline for cloning new apps

@@ -1,15 +1,32 @@
+import { listDemoUsers, listRecentDemoActivity } from "@reactiveweb/db";
 import { StatCard } from "~/components/stat-card";
-import { useDemoStore } from "~/lib/demo-store";
+import {
+  ensureDemoSeeded,
+  mapDbActivityToEvent,
+  mapDbUserToDemoUser,
+  requireAuthSession,
+} from "~/lib/demo-state.server";
+import type { Route } from "./+types/dashboard";
 
 function asPercent(numerator: number, denominator: number) {
   if (denominator <= 0) return 0;
   return Math.round((numerator / denominator) * 100);
 }
 
-export default function DashboardRoute() {
-  const {
-    state: { users, activity },
-  } = useDemoStore();
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireAuthSession(request);
+  await ensureDemoSeeded();
+
+  const [users, activity] = await Promise.all([listDemoUsers(), listRecentDemoActivity(12)]);
+
+  return {
+    users: users.map(mapDbUserToDemoUser),
+    activity: activity.map(mapDbActivityToEvent),
+  };
+}
+
+export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
+  const { users, activity } = loaderData;
 
   const activeUsers = users.filter((user) => user.status === "active").length;
   const suspendedUsers = users.length - activeUsers;
@@ -30,8 +47,8 @@ export default function DashboardRoute() {
           ReactiveWeb Operations Dashboard
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-[var(--muted)] md:text-base">
-          This demo route highlights live workspace metrics and typed state-driven UI. Edit users
-          and auth state in sibling routes and watch this panel update instantly.
+          This demo route highlights live workspace metrics and server-backed data flows. Edit users
+          and auth state in sibling routes and watch this panel refresh from Postgres.
         </p>
       </header>
 

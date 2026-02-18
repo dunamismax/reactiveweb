@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-
 import type { Route } from "./+types/root";
+import { RouteErrorPanel } from "./components/route-error-panel";
 import "./app.css";
-import { DemoStoreProvider } from "./lib/demo-store";
 
 export const meta: Route.MetaFunction = () => [
   { title: "ReactiveWeb Web Demo" },
@@ -24,7 +23,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
-        <DemoStoreProvider>{children}</DemoStoreProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -34,4 +33,14 @@ export function Layout({ children }: { children: ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+export function ErrorBoundary() {
+  return (
+    <Layout>
+      <main className="mx-auto max-w-[900px] p-6">
+        <RouteErrorPanel title="Application Error" />
+      </main>
+    </Layout>
+  );
 }

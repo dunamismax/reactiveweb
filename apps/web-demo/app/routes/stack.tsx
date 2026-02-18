@@ -1,8 +1,10 @@
 import { appProjects, demoAuditLogs, demoUsers } from "@reactiveweb/db/schema";
 import { getTableName } from "drizzle-orm";
-
 import { StackChip } from "~/components/stack-chip";
+import { requireAuthSession } from "~/lib/demo-state.server";
 import { demoEnv } from "~/lib/env";
+import { demoServerEnv } from "~/lib/env.server";
+import type { Route } from "./+types/stack";
 
 const stackRows = [
   {
@@ -19,7 +21,7 @@ const stackRows = [
   },
   {
     label: "Validation",
-    detail: "Zod validates env config and form payloads before state updates.",
+    detail: "Zod validates env config and server payloads at trust boundaries.",
   },
   {
     label: "Auth",
@@ -31,7 +33,14 @@ const stackRows = [
   },
 ];
 
-export default function StackRoute() {
+export async function loader({ request }: Route.LoaderArgs) {
+  await requireAuthSession(request);
+  return {
+    dbConfigured: Boolean(demoServerEnv.DATABASE_URL),
+  };
+}
+
+export default function StackRoute({ loaderData }: Route.ComponentProps) {
   const tableNames = [
     getTableName(appProjects),
     getTableName(demoUsers),
@@ -90,7 +99,7 @@ export default function StackRoute() {
             </div>
             <div className="flex justify-between gap-2">
               <dt className="text-[var(--muted)]">DATABASE_URL</dt>
-              <dd>{demoEnv.DATABASE_URL ? "configured" : "not set"}</dd>
+              <dd>{loaderData.dbConfigured ? "configured" : "not set"}</dd>
             </div>
           </dl>
         </article>

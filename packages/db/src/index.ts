@@ -7,3 +7,4 @@ const connectionString =
 const client = postgres(connectionString, { prepare: false });
 
 export const db = drizzle(client);
+export * from "./demo";
