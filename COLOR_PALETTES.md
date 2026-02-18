@@ -55,9 +55,9 @@ This prevents non-token contexts from drifting off-theme.
 
 ### Ranking/Status Convention
 
-- `Favorite (Stephen)` or `Tied 1st Place (Stephen)`
+- `Favorite (Stephen Sawyer)` or `Tied 1st Place (Stephen Sawyer)`
 - `2nd Place`, `3rd Place`, etc.
-- `Least Favorite (Stephen), retained for reference`
+- `Least Favorite (Stephen Sawyer), retained for reference`
 - Remove entries entirely only when explicitly requested.
 
 ## How To Use This File
@@ -78,14 +78,14 @@ This prevents non-token contexts from drifting off-theme.
 
 | Name | Colors | Source | Status |
 |---|---|---|---|
-| Classic Blue Trio | `#0D6EFD` `#F8F9FA` `#6C757D` | The Marketing Momma + TechByDev list context | 2nd Place Overall (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Classic Blue Trio | `#0D6EFD` `#F8F9FA` `#6C757D` | The Marketing Momma + TechByDev list context | 2nd Place Overall (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 
 ### Original
 
 | Name | Colors | Intent | Status |
 |---|---|---|---|
-| Ink + Sand + Ember | `#101820` `#F2E8CF` `#D97D54` | Editorial, premium, warm contrast | 1st Place Overall (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
-| Night + Ice + Signal | `#111827` `#DDEAF7` `#F97316` | SaaS dashboard CTA clarity | 5th Place Overall (Stephen), close to 1st for orange CTA + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Ink + Sand + Ember | `#101820` `#F2E8CF` `#D97D54` | Editorial, premium, warm contrast | 1st Place Overall (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Night + Ice + Signal | `#111827` `#DDEAF7` `#F97316` | SaaS dashboard CTA clarity | 5th Place Overall (Stephen Sawyer), close to 1st for orange CTA + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 
 ## 4-Color Palettes
 
@@ -98,7 +98,7 @@ This prevents non-token contexts from drifting off-theme.
 
 | Name | Colors | Intent | Status |
 |---|---|---|---|
-| Steel Harbor | `#0B132B` `#1C2541` `#3A506B` `#E0FBFC` | Dark UI with crisp readability | Favorite (Stephen) + Adopted (`apps/web-demo`, 2026-02-18) |
+| Steel Harbor | `#0B132B` `#1C2541` `#3A506B` `#E0FBFC` | Dark UI with crisp readability | Favorite (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18) |
 
 ## 5-Color Palettes
 
@@ -112,12 +112,12 @@ This prevents non-token contexts from drifting off-theme.
 | Name | Colors | Intent | Status |
 |---|---|---|---|
 | Midnight Citrus | `#0B132B` `#1C2541` `#3A506B` `#5BC0BE` `#F6AE2D` | Dark SaaS with energetic CTA | Adopted (`apps/web-demo`, 2026-02-18, trial) |
-| Harbor Night | `#0A1128` `#001F54` `#034078` `#1282A2` `#FEFCFB` | Trust-heavy product sites | Least Favorite (Stephen), retained for reference |
-| Mono + Volt | `#0A0A0A` `#2A2A2A` `#6B7280` `#E5E7EB` `#A3E635` | Developer tooling / dashboards | Least Favorite (Stephen), retained for reference |
+| Harbor Night | `#0A1128` `#001F54` `#034078` `#1282A2` `#FEFCFB` | Trust-heavy product sites | Least Favorite (Stephen Sawyer), retained for reference |
+| Mono + Volt | `#0A0A0A` `#2A2A2A` `#6B7280` `#E5E7EB` `#A3E635` | Developer tooling / dashboards | Least Favorite (Stephen Sawyer), retained for reference |
 | Fjord + Rust | `#102A43` `#243B53` `#486581` `#F0B429` `#D64545` | Analytical UI with warm focus | Adopted (`apps/web-demo`, 2026-02-18, trial) |
-| Soft Brutalism | `#111827` `#E5E7EB` `#9CA3AF` `#2563EB` `#F59E0B` | Brutalist layout with polish | 3rd Place Overall (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Soft Brutalism | `#111827` `#E5E7EB` `#9CA3AF` `#2563EB` `#F59E0B` | Brutalist layout with polish | 3rd Place Overall (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 | Matcha Editorial | `#283618` `#606C38` `#DDA15E` `#FEFAE0` `#BC6C25` | Magazine and brand sites | Adopted (`apps/web-demo`, 2026-02-18, trial) |
-| Nordic Glow | `#1F2937` `#374151` `#9CA3AF` `#F9FAFB` `#22D3EE` | Clean product landing pages | 4th Place Overall (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Nordic Glow | `#1F2937` `#374151` `#9CA3AF` `#F9FAFB` `#22D3EE` | Clean product landing pages | 4th Place Overall (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 
 ## Dark Themes Lab (80s/90s Hacker + Modern Dark)
 
@@ -127,14 +127,14 @@ All palettes in this section are intentionally dark-first.
 
 | Name | Colors | Research Basis | Status |
 |---|---|---|---|
-| Nord Polar Night | `#2E3440` `#3B4252` `#434C5E` `#88C0D0` `#ECEFF4` | Nord official palette | 5th Place Dark Theme (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
-| GitHub Dark Signal | `#0D1117` `#161B22` `#30363D` `#58A6FF` `#C9D1D9` | GitHub dark UI language reference | Tied 2nd Place Dark Theme (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| Nord Polar Night | `#2E3440` `#3B4252` `#434C5E` `#88C0D0` `#ECEFF4` | Nord official palette | 5th Place Dark Theme (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| GitHub Dark Signal | `#0D1117` `#161B22` `#30363D` `#58A6FF` `#C9D1D9` | GitHub dark UI language reference | Tied 2nd Place Dark Theme (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 
 ### Original Dark Themes (Hacker / Retro)
 
 | Name | Colors | Vibe | Status |
 |---|---|---|---|
-| BBS Blue Steel | `#070B14` `#101A2B` `#1C2D46` `#5DA9E9` `#D6E4FF` | Dial-up BBS control panel | 4th Place Dark Theme (Stephen) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
+| BBS Blue Steel | `#070B14` `#101A2B` `#1C2D46` `#5DA9E9` `#D6E4FF` | Dial-up BBS control panel | 4th Place Dark Theme (Stephen Sawyer) + Adopted (`apps/web-demo`, 2026-02-18, trial) |
 
 ## Fast Selection Guide
 

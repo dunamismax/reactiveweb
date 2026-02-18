@@ -1,6 +1,6 @@
 # reactiveweb
 
-Monorepo for Stephen's React projects and apps, built on Bun and a shared TypeScript-first stack.
+Monorepo for Stephen Sawyer's React projects and apps, built on Bun and a shared TypeScript-first stack.
 
 ## Stack
 

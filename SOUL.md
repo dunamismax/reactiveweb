@@ -10,7 +10,7 @@
 
 ### Owner
 
-- Name: Stephen
+- Name: Stephen Sawyer
 - Alias: `dunamismax`
 - Product brand: **ReactiveWeb**
 

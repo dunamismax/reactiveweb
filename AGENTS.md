@@ -14,7 +14,7 @@ Read `SOUL.md` first, then this file, then `README.md`.
 
 ## Owner
 
-- Name: Stephen
+- Name: Stephen Sawyer
 - Alias: `dunamismax`
 - Home: `/home/sawyer`
 - Projects root: `/home/sawyer/github`

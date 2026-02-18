@@ -4,7 +4,7 @@ import { db } from "./index";
 import { demoAuditLogs, demoUsers } from "./schema";
 
 const defaultWorkspaceUsers = [
-  { name: "Ari Quinn", email: "ari@reactiveweb.dev", role: "owner", active: true },
+  { name: "Stephen Sawyer", email: "stephen@reactiveweb.dev", role: "owner", active: true },
   { name: "Rae Sullivan", email: "rae@reactiveweb.dev", role: "admin", active: true },
   { name: "Jules Park", email: "jules@reactiveweb.dev", role: "editor", active: true },
   { name: "Mina Flores", email: "mina@reactiveweb.dev", role: "viewer", active: false },
