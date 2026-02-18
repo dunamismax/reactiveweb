@@ -10,23 +10,25 @@ type StatCardProps = {
 
 const toneClasses = {
   default: "bg-[var(--surface)] text-[var(--foreground)]",
-  good: "bg-[var(--tone-good-bg)] text-[var(--tone-good-fg)]",
-  warn: "bg-[var(--tone-warn-bg)] text-[var(--tone-warn-fg)]",
+  good: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  warn: "bg-rose-500/15 text-rose-300 border-rose-500/30",
 };
 
 export function StatCard({ label, value, trend, tone = "default", icon }: StatCardProps) {
   return (
-    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <article className="card-hover rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-[var(--muted)]">{label}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
         </div>
-        <div
-          className={`inline-flex size-8 items-center justify-center rounded-lg border border-[var(--border)] ${toneClasses[tone]}`}
-        >
-          {icon}
-        </div>
+        {icon ? (
+          <div
+            className={`inline-flex size-9 items-center justify-center rounded-lg border ${toneClasses[tone]}`}
+          >
+            {icon}
+          </div>
+        ) : null}
       </div>
       <p className="mt-3 text-sm text-[var(--muted)]">{trend}</p>
     </article>

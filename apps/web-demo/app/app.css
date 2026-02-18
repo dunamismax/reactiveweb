@@ -17,6 +17,8 @@
   --tone-good-fg: #f2e8cf;
   --tone-warn-bg: #d97d5440;
   --tone-warn-fg: #ffe7da;
+  --tone-error-bg: #e5484d20;
+  --tone-error-fg: #ff9592;
 }
 
 * {
@@ -48,4 +50,89 @@ select,
 button {
   font: inherit;
   color: inherit;
+}
+
+/* Progress bar fill animation */
+.progress-fill {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Table row hover */
+tr.row-interactive {
+  transition: background-color 0.15s ease;
+}
+tr.row-interactive:hover {
+  background-color: var(--overlay-soft);
+}
+
+/* Card hover lift */
+.card-hover {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Smooth nav transitions */
+.nav-transition {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* Route transition */
+.route-transitioning {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+.route-idle {
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+/* Toast animations */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.toast-enter {
+  animation: toast-slide-in 200ms ease forwards;
+}
+
+.toast-exit {
+  animation: toast-slide-out 200ms ease forwards;
+}
+
+.toast-progress-bar {
+  animation: toast-progress linear forwards;
 }

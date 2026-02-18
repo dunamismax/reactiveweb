@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
 import { RouteErrorPanel } from "./components/route-error-panel";
+import { ToastProvider } from "./components/toast";
 import "./app.css";
 
 export const meta: Route.MetaFunction = () => [
@@ -32,7 +33,11 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <ToastProvider>
+      <Outlet />
+    </ToastProvider>
+  );
 }
 
 export function ErrorBoundary() {

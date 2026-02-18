@@ -1,5 +1,7 @@
 import { appProjects, demoAuditLogs, demoUsers } from "@reactiveweb/db/schema";
 import { getTableName } from "drizzle-orm";
+import { DataList } from "~/components/data-list";
+import { SectionHeader } from "~/components/section-header";
 import { StackChip } from "~/components/stack-chip";
 import { requireAuthSession } from "~/lib/demo-state.server";
 import { demoEnv } from "~/lib/env";
@@ -49,14 +51,11 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
 
   return (
     <section>
-      <header className="border-b border-[var(--border)] pb-4">
-        <p className="text-xs tracking-[0.2em] text-[var(--muted)] uppercase">Stack Matrix</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">Technology Coverage</h2>
-        <p className="mt-2 text-sm text-[var(--muted)] md:text-base">
-          This app is the flagship example of the ReactiveWeb stack contract and shared package
-          usage.
-        </p>
-      </header>
+      <SectionHeader
+        caption="Stack Matrix"
+        description="Flagship example of the ReactiveWeb stack contract and shared package usage."
+        title="Technology Coverage"
+      />
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {stackRows.map((row) => (
@@ -84,24 +83,19 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
 
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Validated Demo Env</p>
-          <dl className="mt-3 grid gap-2 text-sm">
-            <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
-              <dt className="text-[var(--muted)]">App Name</dt>
-              <dd>{demoEnv.VITE_APP_NAME}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
-              <dt className="text-[var(--muted)]">Auth Demo Enabled</dt>
-              <dd>{String(demoEnv.VITE_ENABLE_AUTH_DEMO)}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
-              <dt className="text-[var(--muted)]">NODE_ENV</dt>
-              <dd>{demoEnv.NODE_ENV}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-[var(--muted)]">DATABASE_URL</dt>
-              <dd>{loaderData.dbConfigured ? "configured" : "not set"}</dd>
-            </div>
-          </dl>
+          <div className="mt-3">
+            <DataList
+              items={[
+                { label: "App Name", value: demoEnv.VITE_APP_NAME },
+                { label: "Auth Demo Enabled", value: String(demoEnv.VITE_ENABLE_AUTH_DEMO) },
+                { label: "NODE_ENV", value: demoEnv.NODE_ENV },
+                {
+                  label: "DATABASE_URL",
+                  value: loaderData.dbConfigured ? "configured" : "not set",
+                },
+              ]}
+            />
+          </div>
         </article>
       </div>
     </section>
