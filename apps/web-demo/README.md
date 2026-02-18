@@ -14,11 +14,11 @@ Flagship ReactiveWeb app that demonstrates the full stack contract in one place:
 From repository root:
 
 ```bash
-pnpm run demo:bootstrap
-pnpm run dev
-pnpm run test:web-demo
-pnpm run build
-pnpm run typecheck
+corepack pnpm run demo:bootstrap
+corepack pnpm run dev
+corepack pnpm run test:web-demo
+corepack pnpm run build
+corepack pnpm run typecheck
 ```
 
 ## Required Environment
@@ -54,7 +54,7 @@ docker run -d \
 ## Deterministic Local Bootstrap
 
 ```bash
-pnpm run demo:bootstrap
+corepack pnpm run demo:bootstrap
 ```
 
 What it does:
@@ -62,6 +62,46 @@ What it does:
 1. Runs Drizzle migrations (`packages/db/drizzle.config.ts`).
 2. Seeds default workspace users if missing.
 3. Backfills missing `password_hash` values idempotently.
+
+## Visual Regression Testing (Playwright)
+
+One-time install:
+
+```bash
+corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
+```
+
+Run modes (from repo root):
+
+```bash
+# CI/headless snapshot assertion run
+corepack pnpm run test:visual:web-demo:ci
+
+# local headed debug run
+corepack pnpm run test:visual:web-demo:debug
+
+# baseline snapshot update
+corepack pnpm run test:visual:web-demo:update
+```
+
+Determinism controls in this setup:
+
+1. `demo:bootstrap` runs before each visual command.
+2. `demo:visual:prepare` provisions a stable invite fixture token used by `/invite/:token`.
+3. Auth setup test signs in once and reuses storage state for protected routes.
+4. Playwright uses fixed viewport (`1440x900`), `en-US` locale, `UTC` timezone, reduced motion, and animation disabling during screenshot capture.
+
+## Troubleshooting
+
+1. `AUTH_DEMO_PASSWORD must be set`:
+- Run `set -a; source .env; set +a` before visual commands.
+
+2. Snapshot drift after local data mutation:
+- Re-run `corepack pnpm run demo:bootstrap` then `corepack pnpm run test:visual:web-demo:update`.
+- If the local DB was heavily modified, recreate the local Postgres container and seed again.
+
+3. Browser executable missing:
+- Run `corepack pnpm --filter @reactiveweb/web-demo run test:visual:install`.
 
 ## Auth Flow (Credentials)
 

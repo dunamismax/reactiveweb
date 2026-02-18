@@ -17,3 +17,8 @@ pnpm-debug.log*
 
 # system
 .DS_Store
+
+# playwright outputs
+apps/web-demo/playwright-report/
+apps/web-demo/test-results/
+apps/web-demo/tests/visual/.auth/

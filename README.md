@@ -79,6 +79,24 @@ corepack pnpm run build
 corepack pnpm run test:web-demo
 ```
 
+## Visual Regression (Playwright)
+
+```bash
+# one-time browser install
+corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
+
+# headless (CI-style)
+corepack pnpm run test:visual:web-demo:ci
+
+# local headed debug
+corepack pnpm run test:visual:web-demo:debug
+
+# update baselines
+corepack pnpm run test:visual:web-demo:update
+```
+
+These commands run deterministic prep first (`demo:bootstrap` + `demo:visual:prepare`) so protected routes and `/invite/:token` fixtures are stable before screenshots.
+
 ## Starter Apps
 
 - `apps/web-demo`: exemplar dashboard app covering Auth.js + Postgres-backed sessions/users/audit flows

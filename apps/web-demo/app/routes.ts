@@ -5,6 +5,7 @@ export default [
   route("invite/:token", "routes/invite.$token.tsx"),
   layout("routes/dashboard-layout.tsx", [
     index("routes/dashboard.tsx"),
+    route("dashboard", "routes/dashboard-redirect.ts"),
     route("users", "routes/users.tsx"),
     route("users/:id", "routes/user-detail.tsx"),
     route("activity", "routes/activity.tsx"),
