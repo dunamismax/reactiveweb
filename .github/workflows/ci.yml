@@ -36,3 +36,63 @@ jobs:
 
       - name: Build
         run: corepack pnpm run build
+
+  visual-regression:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: reactiveweb
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d reactiveweb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://postgres:postgres@localhost:55432/reactiveweb
+      AUTH_SECRET: reactiveweb-ci-auth-secret-16chars
+      AUTH_DEMO_PASSWORD: reactiveweb-ci-demo-password
+      VITE_DEMO_ADMIN_EMAIL: admin@reactiveweb.dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24.13.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.13.1
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: corepack pnpm --filter @reactiveweb/web-demo exec playwright install --with-deps chromium
+
+      - name: Bootstrap demo data
+        run: corepack pnpm run demo:bootstrap
+
+      - name: Prepare visual fixtures
+        run: corepack pnpm run demo:visual:prepare
+
+      - name: Run visual regression
+        run: corepack pnpm run test:visual:web-demo:ci
+
+      - name: Upload visual artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-demo-visual-artifacts
+          path: |
+            apps/web-demo/test-results
+            apps/web-demo/playwright-report
+          if-no-files-found: ignore

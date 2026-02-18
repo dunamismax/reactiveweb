@@ -97,6 +97,9 @@ corepack pnpm run test:visual:web-demo:update
 
 These commands run deterministic prep first (`demo:bootstrap` + `demo:visual:prepare`) so protected routes and `/invite/:token` fixtures are stable before screenshots.
 
+CI runs visual regression in a dedicated `visual-regression` job with Postgres on `localhost:55432` and uploads Playwright artifacts on failures.
+When snapshots intentionally change, run `corepack pnpm run test:visual:web-demo:update` locally and commit updated `apps/web-demo/tests/visual/routes.visual.spec.ts-snapshots/*.png`.
+
 ## Starter Apps
 
 - `apps/web-demo`: exemplar dashboard app covering Auth.js + Postgres-backed sessions/users/audit flows

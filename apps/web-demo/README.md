@@ -91,6 +91,21 @@ Determinism controls in this setup:
 3. Auth setup test signs in once and reuses storage state for protected routes.
 4. Playwright uses fixed viewport (`1440x900`), `en-US` locale, `UTC` timezone, reduced motion, and animation disabling during screenshot capture.
 
+## CI Visual Regression
+
+- GitHub Actions runs visual checks in a dedicated `visual-regression` job.
+- CI provisions Postgres at `localhost:55432`, then runs:
+  - `corepack pnpm run demo:bootstrap`
+  - `corepack pnpm run demo:visual:prepare`
+  - `corepack pnpm run test:visual:web-demo:ci`
+- On failures, Playwright artifacts are uploaded (`apps/web-demo/test-results`, `apps/web-demo/playwright-report`).
+
+## Baseline Update Workflow
+
+1. Run `corepack pnpm run test:visual:web-demo:update`.
+2. Review snapshot changes under `apps/web-demo/tests/visual/routes.visual.spec.ts-snapshots/`.
+3. Commit approved snapshot PNG updates with the related UI change.
+
 ## Troubleshooting
 
 1. `AUTH_DEMO_PASSWORD must be set`:
