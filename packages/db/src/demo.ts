@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "./index.ts";
@@ -22,6 +22,10 @@ function constantTimeMatch(left: string, right: string) {
   return timingSafeEqual(leftBytes, rightBytes);
 }
 
+function buildDemoUsername(userId: string) {
+  return `user_${userId.replaceAll("-", "")}`;
+}
+
 export async function ensureDemoWorkspaceSeed(adminEmail: string, passwordHash: string) {
   const [{ total }] = await db.select({ total: count() }).from(demoUsers);
   if (total > 0) {
@@ -29,14 +33,19 @@ export async function ensureDemoWorkspaceSeed(adminEmail: string, passwordHash: 
   }
 
   const now = new Date();
-  const usersToInsert = defaultWorkspaceUsers.map((user, index) => ({
-    name: user.name,
-    email: index === 0 ? adminEmail.toLowerCase() : user.email,
-    passwordHash,
-    role: user.role,
-    active: user.active,
-    lastSeenAt: now,
-  }));
+  const usersToInsert = defaultWorkspaceUsers.map((user, index) => {
+    const id = randomUUID();
+    return {
+      id,
+      name: user.name,
+      email: index === 0 ? adminEmail.toLowerCase() : user.email,
+      username: buildDemoUsername(id),
+      passwordHash,
+      role: user.role,
+      active: user.active,
+      lastSeenAt: now,
+    };
+  });
 
   const insertedUsers = await db.insert(demoUsers).values(usersToInsert).returning({
     id: demoUsers.id,
@@ -65,6 +74,8 @@ export async function listDemoUsers() {
       id: demoUsers.id,
       name: demoUsers.name,
       email: demoUsers.email,
+      username: demoUsers.username,
+      mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
       active: demoUsers.active,
       createdAt: demoUsers.createdAt,
@@ -81,7 +92,9 @@ export async function getDemoUserById(id: string) {
       id: demoUsers.id,
       name: demoUsers.name,
       email: demoUsers.email,
+      username: demoUsers.username,
       passwordHash: demoUsers.passwordHash,
+      mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
       active: demoUsers.active,
       lastSeenAt: demoUsers.lastSeenAt,
@@ -99,7 +112,9 @@ export async function getDemoUserByEmail(email: string) {
       id: demoUsers.id,
       name: demoUsers.name,
       email: demoUsers.email,
+      username: demoUsers.username,
       passwordHash: demoUsers.passwordHash,
+      mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
       active: demoUsers.active,
     })
@@ -116,11 +131,14 @@ export async function createDemoUser(input: {
   role: string;
   passwordHash: string;
 }) {
+  const id = randomUUID();
   const [created] = await db
     .insert(demoUsers)
     .values({
+      id,
       name: input.name,
       email: input.email.toLowerCase(),
+      username: buildDemoUsername(id),
       passwordHash: input.passwordHash,
       role: input.role,
       active: true,
@@ -132,6 +150,8 @@ export async function createDemoUser(input: {
       id: demoUsers.id,
       name: demoUsers.name,
       email: demoUsers.email,
+      username: demoUsers.username,
+      mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
       active: demoUsers.active,
     });
@@ -166,6 +186,8 @@ export async function updateDemoUserName(input: { userId: string; name: string }
       id: demoUsers.id,
       name: demoUsers.name,
       email: demoUsers.email,
+      username: demoUsers.username,
+      mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
       active: demoUsers.active,
     });
