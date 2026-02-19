@@ -1,12 +1,31 @@
 import { z } from "zod";
 
+const envBooleanSchema = z.preprocess((value) => {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) {
+      return true;
+    }
+    if (["0", "false", "no", "off"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+
+  return value;
+}, z.boolean());
+
 export const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
 export const demoClientEnvSchema = baseEnvSchema.extend({
   VITE_APP_NAME: z.string().min(1).default("ReactiveWeb Demo"),
-  VITE_ENABLE_AUTH_DEMO: z.coerce.boolean().default(true),
+  VITE_ENABLE_AUTH_DEMO: envBooleanSchema.default(true),
   VITE_DEMO_ADMIN_EMAIL: z.string().email().default("admin@reactiveweb.dev"),
 });
 

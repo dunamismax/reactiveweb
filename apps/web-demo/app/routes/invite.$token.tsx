@@ -93,19 +93,19 @@ export async function action({ request, params }: Route.ActionArgs) {
     return errorPayload("FORBIDDEN", "This invite link has expired.");
   }
 
-  const consumed = await consumeDemoInvite(invite.id);
-  if (!consumed) {
-    return errorPayload("NOT_FOUND", "This invite link has already been used.");
-  }
-
   const passwordHash = hashPassword(parsed.data.password);
   const existing = await getDemoUserByEmail(invite.email);
 
   let userId: string;
   if (existing) {
-    await updateDemoUserPassword({ userId: existing.id, passwordHash });
-    await updateDemoUserRole({ userId: existing.id, role: invite.role });
-    await updateDemoUserStatus({ userId: existing.id, active: true });
+    const updatedPassword = await updateDemoUserPassword({ userId: existing.id, passwordHash });
+    const updatedRole = await updateDemoUserRole({ userId: existing.id, role: invite.role });
+    const updatedStatus = await updateDemoUserStatus({ userId: existing.id, active: true });
+
+    if (!updatedPassword || !updatedRole || !updatedStatus) {
+      return errorPayload("INTERNAL_ERROR", "Unable to activate invite account.");
+    }
+
     userId = existing.id;
   } else {
     const created = await createDemoUser({
@@ -120,6 +120,11 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
 
     userId = created.id;
+  }
+
+  const consumed = await consumeDemoInvite(invite.id);
+  if (!consumed) {
+    return errorPayload("NOT_FOUND", "This invite link has already been used.");
   }
 
   await recordAuditEvent({

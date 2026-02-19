@@ -59,11 +59,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         return;
       }
       if (event.key === "ArrowDown") {
+        if (filtered.length === 0) {
+          event.preventDefault();
+          return;
+        }
         event.preventDefault();
         setActiveIndex((i) => (i + 1) % filtered.length);
         return;
       }
       if (event.key === "ArrowUp") {
+        if (filtered.length === 0) {
+          event.preventDefault();
+          return;
+        }
         event.preventDefault();
         setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length);
         return;

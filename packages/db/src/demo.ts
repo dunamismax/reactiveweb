@@ -336,8 +336,8 @@ export async function consumeDemoInvite(inviteId: string) {
   return deleted.length > 0;
 }
 
-export async function listRecentDemoActivity(limit = 12) {
-  return db
+export async function listRecentDemoActivity(limit?: number) {
+  const query = db
     .select({
       id: demoAuditLogs.id,
       actorId: demoAuditLogs.actorId,
@@ -348,8 +348,13 @@ export async function listRecentDemoActivity(limit = 12) {
     })
     .from(demoAuditLogs)
     .leftJoin(demoUsers, eq(demoUsers.id, demoAuditLogs.actorId))
-    .orderBy(desc(demoAuditLogs.createdAt))
-    .limit(limit);
+    .orderBy(desc(demoAuditLogs.createdAt));
+
+  if (typeof limit === "number") {
+    return query.limit(limit);
+  }
+
+  return query;
 }
 
 export async function insertDemoAuditLog(input: {

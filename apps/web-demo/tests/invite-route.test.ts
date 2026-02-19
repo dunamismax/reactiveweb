@@ -32,6 +32,14 @@ function buildPostRequest(pathname: string, fields: Record<string, string>) {
   });
 }
 
+const activeInvite = {
+  id: "i-1",
+  email: "new@reactiveweb.dev",
+  role: "viewer",
+  expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+  createdAt: new Date("2098-01-01T00:00:00.000Z"),
+};
+
 describe("invite token route", () => {
   beforeEach(() => {
     db.consumeDemoInvite.mockReset();
@@ -45,13 +53,7 @@ describe("invite token route", () => {
   });
 
   it("loader returns valid invite payload when token exists and is active", async () => {
-    db.getDemoInviteByToken.mockResolvedValue({
-      id: "i-1",
-      email: "new@reactiveweb.dev",
-      role: "viewer",
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-      createdAt: new Date("2098-01-01T00:00:00.000Z"),
-    });
+    db.getDemoInviteByToken.mockResolvedValue(activeInvite);
 
     const payload = await inviteRoute.loader({
       params: { token: "invite-token" },
@@ -117,12 +119,19 @@ describe("invite token route", () => {
 
   it("action enforces single-use token consumption", async () => {
     db.getDemoInviteByToken.mockResolvedValue({
-      id: "i-1",
-      email: "new@reactiveweb.dev",
-      role: "viewer",
-      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-      createdAt: new Date("2098-01-01T00:00:00.000Z"),
+      ...activeInvite,
+      email: "existing@reactiveweb.dev",
+      role: "editor",
     });
+    db.getDemoUserByEmail.mockResolvedValue({
+      id: "u-1",
+      email: "existing@reactiveweb.dev",
+      role: "viewer",
+      active: false,
+    });
+    db.updateDemoUserPassword.mockResolvedValue({ id: "u-1" });
+    db.updateDemoUserRole.mockResolvedValue({ id: "u-1" });
+    db.updateDemoUserStatus.mockResolvedValue({ id: "u-1" });
     db.consumeDemoInvite.mockResolvedValue(false);
 
     const payload = await inviteRoute.action({
@@ -136,7 +145,9 @@ describe("invite token route", () => {
     expect(payload.ok).toBe(false);
     if (!("error" in payload)) throw new Error("Expected error payload");
     expect(payload.error.code).toBe("NOT_FOUND");
+    expect(db.updateDemoUserPassword).toHaveBeenCalledTimes(1);
     expect(db.createDemoUser).not.toHaveBeenCalled();
+    expect(demoState.recordAuditEvent).not.toHaveBeenCalled();
   });
 
   it("action activates existing users without creating duplicates", async () => {
@@ -172,5 +183,56 @@ describe("invite token route", () => {
     expect(db.updateDemoUserStatus).toHaveBeenCalledWith({ userId: "u-1", active: true });
     expect(db.createDemoUser).not.toHaveBeenCalled();
     expect(demoState.recordAuditEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not consume invite when creating a new user fails", async () => {
+    db.getDemoInviteByToken.mockResolvedValue(activeInvite);
+    db.getDemoUserByEmail.mockResolvedValue(null);
+    db.createDemoUser.mockResolvedValue(null);
+
+    const payload = await inviteRoute.action({
+      params: { token: "invite-token" },
+      request: buildPostRequest("/invite/invite-token", {
+        password: "new-pass-123",
+        confirmPassword: "new-pass-123",
+      }),
+    } as unknown as InviteActionArgs);
+
+    expect(payload.ok).toBe(false);
+    if (!("error" in payload)) throw new Error("Expected error payload");
+    expect(payload.error.code).toBe("INTERNAL_ERROR");
+    expect(db.consumeDemoInvite).not.toHaveBeenCalled();
+    expect(demoState.recordAuditEvent).not.toHaveBeenCalled();
+  });
+
+  it("fails existing-user activation when any mutation returns null", async () => {
+    db.getDemoInviteByToken.mockResolvedValue({
+      ...activeInvite,
+      email: "existing@reactiveweb.dev",
+      role: "admin",
+    });
+    db.getDemoUserByEmail.mockResolvedValue({
+      id: "u-1",
+      email: "existing@reactiveweb.dev",
+      role: "viewer",
+      active: false,
+    });
+    db.updateDemoUserPassword.mockResolvedValue({ id: "u-1" });
+    db.updateDemoUserRole.mockResolvedValue(null);
+    db.updateDemoUserStatus.mockResolvedValue({ id: "u-1" });
+
+    const payload = await inviteRoute.action({
+      params: { token: "invite-token" },
+      request: buildPostRequest("/invite/invite-token", {
+        password: "new-pass-123",
+        confirmPassword: "new-pass-123",
+      }),
+    } as unknown as InviteActionArgs);
+
+    expect(payload.ok).toBe(false);
+    if (!("error" in payload)) throw new Error("Expected error payload");
+    expect(payload.error.code).toBe("INTERNAL_ERROR");
+    expect(db.consumeDemoInvite).not.toHaveBeenCalled();
+    expect(demoState.recordAuditEvent).not.toHaveBeenCalled();
   });
 });

@@ -85,5 +85,64 @@ describe("activity export route", () => {
     expect(lines[0]).toBe("id,actor,action,target,timestamp");
     expect(lines[1]).toContain('"user,""special""@reactiveweb.dev"');
     expect(demoState.listActivity).toHaveBeenCalledTimes(1);
+    expect(demoState.listActivity.mock.calls[0][0]).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      includeAll: true,
+      action: "Updated",
+      q: "user",
+    });
+  });
+
+  it("exports the full filtered dataset regardless of requested page", async () => {
+    demoState.listActivity.mockResolvedValue({
+      rows: [
+        {
+          id: "e-1",
+          actor: "Owner",
+          action: "Updated",
+          target: "user a",
+          createdAt: "2026-02-18T10:00:00.000Z",
+        },
+        {
+          id: "e-2",
+          actor: "Owner",
+          action: "Updated",
+          target: "user b",
+          createdAt: "2026-02-18T10:01:00.000Z",
+        },
+        {
+          id: "e-3",
+          actor: "Owner",
+          action: "Updated",
+          target: "user c",
+          createdAt: "2026-02-18T10:02:00.000Z",
+        },
+      ],
+      total: 3,
+    });
+
+    const response = (await exportRoute.loader({
+      request: new Request(
+        "http://localhost/activity/export.csv?page=9&pageSize=1&action=Updated&actor=Owner&q=user",
+      ),
+    } as unknown as ExportLoaderArgs)) as Response;
+
+    const body = await response.text();
+    const lines = body.split("\n");
+    expect(lines).toHaveLength(4);
+    expect(lines[1]).toContain("e-1");
+    expect(lines[2]).toContain("e-2");
+    expect(lines[3]).toContain("e-3");
+
+    expect(demoState.listActivity).toHaveBeenCalledTimes(1);
+    expect(demoState.listActivity.mock.calls[0][0]).toMatchObject({
+      page: 1,
+      pageSize: 1,
+      includeAll: true,
+      action: "Updated",
+      actorName: "Owner",
+      q: "user",
+    });
   });
 });

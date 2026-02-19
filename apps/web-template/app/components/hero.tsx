@@ -1,7 +1,7 @@
 import { Button } from "@reactiveweb/ui";
 
 const checkpoints = [
-  "Bun workspace monorepo ready",
+  "Node.js + pnpm workspace monorepo ready",
   "Shared UI, DB, and config packages",
   "React Router SPA-first app baseline",
   "Tailwind + shadcn-style component patterns",

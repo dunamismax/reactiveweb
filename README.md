@@ -79,31 +79,6 @@ corepack pnpm run build
 corepack pnpm run test:web-demo
 ```
 
-## Visual Regression (Playwright)
-
-```bash
-# one-time browser install
-corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
-
-# headless deterministic run (prep + assert, use locally)
-corepack pnpm run test:visual:web-demo:ci
-
-# headless assert-only run (CI workflow use after prep)
-corepack pnpm run test:visual:web-demo:assert:ci
-
-# local headed debug
-corepack pnpm run test:visual:web-demo:debug
-
-# update baselines
-corepack pnpm run test:visual:web-demo:update
-```
-
-`test:visual:web-demo`, `test:visual:web-demo:ci`, `test:visual:web-demo:debug`, and `test:visual:web-demo:update` run deterministic prep first (`demo:bootstrap` + `demo:visual:prepare`) so protected routes and `/invite/:token` fixtures are stable before screenshots.
-`test:visual:web-demo:assert:ci` is assert-only (Playwright CI command) and expects prep to already be done.
-
-CI runs visual regression in a dedicated `visual-regression` job with Postgres on `localhost:55432`, executes prep once (`demo:bootstrap` + `demo:visual:prepare`), then runs `test:visual:web-demo:assert:ci`. Playwright artifacts are uploaded on failures.
-When snapshots intentionally change, run `corepack pnpm run test:visual:web-demo:update` locally and commit updated `apps/web-demo/tests/visual/routes.visual.spec.ts-snapshots/*.png`.
-
 ## Starter Apps
 
 - `apps/web-demo`: exemplar dashboard app covering Auth.js + Postgres-backed sessions/users/audit flows

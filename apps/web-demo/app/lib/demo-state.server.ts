@@ -75,6 +75,7 @@ export function mapDbActivityToEvent(row: ActivityRow): ActivityEvent {
 export async function listActivity(params: {
   page: number;
   pageSize: number;
+  includeAll?: boolean;
   action?: string;
   actorName?: string;
   from?: Date;
@@ -82,7 +83,9 @@ export async function listActivity(params: {
   q?: string;
 }) {
   const ceiling = Math.min(params.page * params.pageSize * 2 + 200, 500);
-  const allRows = await listRecentDemoActivity(ceiling);
+  const allRows = params.includeAll
+    ? await listRecentDemoActivity()
+    : await listRecentDemoActivity(ceiling);
 
   let filtered: typeof allRows = allRows;
 
@@ -113,8 +116,9 @@ export async function listActivity(params: {
   }
 
   const total = filtered.length;
-  const offset = (params.page - 1) * params.pageSize;
-  const rows = filtered.slice(offset, offset + params.pageSize);
+  const rows = params.includeAll
+    ? filtered
+    : filtered.slice((params.page - 1) * params.pageSize, params.page * params.pageSize);
 
   return {
     rows: rows.map(mapDbActivityToEvent),

@@ -13,9 +13,9 @@ Reusable React Router SPA starter for new apps in `reactiveweb`.
 ## Commands
 
 ```bash
-pnpm run dev
-pnpm run build
-pnpm run typecheck
+corepack pnpm run dev
+corepack pnpm run build
+corepack pnpm run typecheck
 ```
 
 ## New app bootstrap flow
@@ -23,4 +23,4 @@ pnpm run typecheck
 1. Copy this directory: `cp -R apps/web-template apps/<new-app-name>`
 2. Rename the package in `apps/<new-app-name>/package.json`
 3. Update route content and metadata in `app/root.tsx` and `app/routes/home.tsx`
-4. Run from repo root: `pnpm run dev:app <new-app-name>`
+4. Run from repo root: `corepack pnpm run dev:app <new-app-name>`

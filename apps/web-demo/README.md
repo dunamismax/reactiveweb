@@ -63,64 +63,14 @@ What it does:
 2. Seeds default workspace users if missing.
 3. Backfills missing `password_hash` values idempotently.
 
-## Visual Regression Testing (Playwright)
-
-One-time install:
-
-```bash
-corepack pnpm --filter @reactiveweb/web-demo run test:visual:install
-```
-
-Run modes (from repo root):
-
-```bash
-# deterministic CI/headless run (prep + assert, use locally)
-corepack pnpm run test:visual:web-demo:ci
-
-# headless assert-only run (CI workflow use after prep)
-corepack pnpm run test:visual:web-demo:assert:ci
-
-# local headed debug run
-corepack pnpm run test:visual:web-demo:debug
-
-# baseline snapshot update
-corepack pnpm run test:visual:web-demo:update
-```
-
-Determinism controls in this setup:
-
-1. `demo:bootstrap` runs before each full visual command (`test:visual:web-demo`, `test:visual:web-demo:ci`, `test:visual:web-demo:debug`, `test:visual:web-demo:update`).
-2. `demo:visual:prepare` provisions a stable invite fixture token used by `/invite/:token` before each full visual command.
-3. Auth setup test signs in once and reuses storage state for protected routes.
-4. Playwright uses fixed viewport (`1440x900`), `en-US` locale, `UTC` timezone, reduced motion, and animation disabling during screenshot capture.
-5. `test:visual:web-demo:assert:ci` is assert-only and is intended for CI after prep has already run.
-
-## CI Visual Regression
-
-- GitHub Actions runs visual checks in a dedicated `visual-regression` job.
-- CI provisions Postgres at `localhost:55432`, then runs:
-  - `corepack pnpm run demo:bootstrap`
-  - `corepack pnpm run demo:visual:prepare`
-  - `corepack pnpm run test:visual:web-demo:assert:ci`
-- On failures, Playwright artifacts are uploaded (`apps/web-demo/test-results`, `apps/web-demo/playwright-report`).
-
-## Baseline Update Workflow
-
-1. Run `corepack pnpm run test:visual:web-demo:update`.
-2. Review snapshot changes under `apps/web-demo/tests/visual/routes.visual.spec.ts-snapshots/`.
-3. Commit approved snapshot PNG updates with the related UI change.
-
 ## Troubleshooting
 
-1. `AUTH_DEMO_PASSWORD must be set`:
-- Run `set -a; source .env; set +a` before visual commands.
+1. Local auth failures (`AUTH_DEMO_PASSWORD` / session issues):
+- Run `set -a; source .env; set +a` before running dev/test commands.
 
-2. Snapshot drift after local data mutation:
-- Re-run `corepack pnpm run demo:bootstrap` then `corepack pnpm run test:visual:web-demo:update`.
+2. Drift after local data mutation:
+- Re-run `corepack pnpm run demo:bootstrap`.
 - If the local DB was heavily modified, recreate the local Postgres container and seed again.
-
-3. Browser executable missing:
-- Run `corepack pnpm --filter @reactiveweb/web-demo run test:visual:install`.
 
 ## Auth Flow (Credentials)
 

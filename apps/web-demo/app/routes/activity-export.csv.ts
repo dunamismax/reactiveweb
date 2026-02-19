@@ -22,14 +22,19 @@ export async function loader({ request }: Route.LoaderArgs) {
   const fromDate = query.from ? new Date(query.from) : undefined;
   const toDate = query.to ? new Date(query.to) : undefined;
 
-  const result = await listActivity({
-    page: query.page,
-    pageSize: query.pageSize,
+  const filters = {
     action: query.action && query.action !== "All" ? query.action : undefined,
     actorName: query.actor,
     from: fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined,
     to: toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined,
     q: query.q,
+  };
+
+  const result = await listActivity({
+    ...filters,
+    page: 1,
+    pageSize: query.pageSize,
+    includeAll: true,
   });
 
   const rows = result.rows.map((row) => [
