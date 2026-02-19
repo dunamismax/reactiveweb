@@ -43,7 +43,8 @@ export function mapDbUserToDemoUser(
   return {
     id: user.id,
     name: user.name,
-    email: user.email,
+    username: user.username,
+    mustChangePassword: user.mustChangePassword,
     role: toRole(user.role),
     status: user.active ? "active" : "suspended",
     createdAt: serializeDate(user.createdAt),
@@ -152,7 +153,7 @@ export function buildActivityTrend(
 
 export async function ensureDemoSeeded() {
   const passwordHash = getBootstrapPasswordHash();
-  await ensureDemoWorkspaceSeed(demoServerEnv.VITE_DEMO_ADMIN_EMAIL, passwordHash);
+  await ensureDemoWorkspaceSeed(demoServerEnv.VITE_DEMO_OWNER_USERNAME, passwordHash);
   await fillMissingDemoUserPasswordHashes(passwordHash);
 }
 
@@ -190,6 +191,8 @@ export type RequiredSession = {
     id: string;
     role: Role;
     name: string;
+    username: string;
+    mustChangePassword: boolean;
   };
 };
 
@@ -208,11 +211,20 @@ export async function requireAuthSession(request: Request): Promise<RequiredSess
     throw redirect("/auth?error=session-revoked");
   }
 
+  const { pathname } = new URL(request.url);
+  const isSettingsRoute = pathname === "/settings" || pathname.startsWith("/settings/");
+
+  if (dbUser.mustChangePassword && !isSettingsRoute) {
+    throw redirect("/settings?required=password-change");
+  }
+
   return {
     user: {
       id: dbUser.id,
       name: dbUser.name,
+      username: dbUser.username,
       role: toRole(dbUser.role),
+      mustChangePassword: dbUser.mustChangePassword,
     },
   };
 }

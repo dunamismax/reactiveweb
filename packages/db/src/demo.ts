@@ -1,46 +1,51 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "./index.ts";
-import { demoAuditLogs, demoInvites, demoUsers } from "./schema/index.ts";
+import { demoAuditLogs, demoUsers } from "./schema/index.ts";
 
 const defaultWorkspaceUsers = [
-  { name: "Stephen Sawyer", email: "stephen@reactiveweb.dev", role: "owner", active: true },
-  { name: "Rae Sullivan", email: "rae@reactiveweb.dev", role: "admin", active: true },
-  { name: "Jules Park", email: "jules@reactiveweb.dev", role: "editor", active: true },
-  { name: "Mina Flores", email: "mina@reactiveweb.dev", role: "viewer", active: false },
+  { name: "Stephen Sawyer", username: "owner", role: "owner", active: true },
+  { name: "Rae Sullivan", username: "admin", role: "admin", active: true },
+  { name: "Jules Park", username: "editor", role: "editor", active: true },
+  { name: "Mina Flores", username: "viewer", role: "viewer", active: false },
 ] as const;
 
-function hashInviteToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
+function normalizeUsername(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return normalized.length > 0 ? normalized : "owner";
 }
 
-function constantTimeMatch(left: string, right: string) {
-  const leftBytes = Buffer.from(left);
-  const rightBytes = Buffer.from(right);
-  if (leftBytes.length !== rightBytes.length) return false;
-  return timingSafeEqual(leftBytes, rightBytes);
+function ensureUniqueUsername(base: string, used: Set<string>) {
+  let candidate = normalizeUsername(base);
+  let index = 1;
+
+  while (used.has(candidate)) {
+    candidate = `${normalizeUsername(base)}-${index}`;
+    index += 1;
+  }
+
+  used.add(candidate);
+  return candidate;
 }
 
-function buildDemoUsername(userId: string) {
-  return `user_${userId.replaceAll("-", "")}`;
-}
-
-export async function ensureDemoWorkspaceSeed(adminEmail: string, passwordHash: string) {
+export async function ensureDemoWorkspaceSeed(ownerUsername: string, passwordHash: string) {
   const [{ total }] = await db.select({ total: count() }).from(demoUsers);
   if (total > 0) {
     return;
   }
 
   const now = new Date();
+  const usedUsernames = new Set<string>();
+
   const usersToInsert = defaultWorkspaceUsers.map((user, index) => {
     const id = randomUUID();
     return {
       id,
       name: user.name,
-      email: index === 0 ? adminEmail.toLowerCase() : user.email,
-      username: buildDemoUsername(id),
+      username: ensureUniqueUsername(index === 0 ? ownerUsername : user.username, usedUsernames),
       passwordHash,
+      mustChangePassword: false,
       role: user.role,
       active: user.active,
       lastSeenAt: now,
@@ -73,7 +78,6 @@ export async function listDemoUsers() {
     .select({
       id: demoUsers.id,
       name: demoUsers.name,
-      email: demoUsers.email,
       username: demoUsers.username,
       mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
@@ -91,7 +95,6 @@ export async function getDemoUserById(id: string) {
     .select({
       id: demoUsers.id,
       name: demoUsers.name,
-      email: demoUsers.email,
       username: demoUsers.username,
       passwordHash: demoUsers.passwordHash,
       mustChangePassword: demoUsers.mustChangePassword,
@@ -106,12 +109,11 @@ export async function getDemoUserById(id: string) {
   return user ?? null;
 }
 
-export async function getDemoUserByEmail(email: string) {
+export async function getDemoUserByUsername(username: string) {
   const [user] = await db
     .select({
       id: demoUsers.id,
       name: demoUsers.name,
-      email: demoUsers.email,
       username: demoUsers.username,
       passwordHash: demoUsers.passwordHash,
       mustChangePassword: demoUsers.mustChangePassword,
@@ -119,7 +121,7 @@ export async function getDemoUserByEmail(email: string) {
       active: demoUsers.active,
     })
     .from(demoUsers)
-    .where(eq(demoUsers.email, email.toLowerCase()))
+    .where(eq(demoUsers.username, normalizeUsername(username)))
     .limit(1);
 
   return user ?? null;
@@ -127,29 +129,28 @@ export async function getDemoUserByEmail(email: string) {
 
 export async function createDemoUser(input: {
   name: string;
-  email: string;
+  username: string;
   role: string;
   passwordHash: string;
+  mustChangePassword?: boolean;
 }) {
-  const id = randomUUID();
   const [created] = await db
     .insert(demoUsers)
     .values({
-      id,
+      id: randomUUID(),
       name: input.name,
-      email: input.email.toLowerCase(),
-      username: buildDemoUsername(id),
+      username: normalizeUsername(input.username),
       passwordHash: input.passwordHash,
+      mustChangePassword: input.mustChangePassword ?? false,
       role: input.role,
       active: true,
       lastSeenAt: new Date(),
       updatedAt: new Date(),
     })
-    .onConflictDoNothing({ target: demoUsers.email })
+    .onConflictDoNothing({ target: demoUsers.username })
     .returning({
       id: demoUsers.id,
       name: demoUsers.name,
-      email: demoUsers.email,
       username: demoUsers.username,
       mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
@@ -185,7 +186,6 @@ export async function updateDemoUserName(input: { userId: string; name: string }
     .returning({
       id: demoUsers.id,
       name: demoUsers.name,
-      email: demoUsers.email,
       username: demoUsers.username,
       mustChangePassword: demoUsers.mustChangePassword,
       role: demoUsers.role,
@@ -195,16 +195,26 @@ export async function updateDemoUserName(input: { userId: string; name: string }
   return updated ?? null;
 }
 
-export async function updateDemoUserPassword(input: { userId: string; passwordHash: string }) {
+export async function updateDemoUserPassword(input: {
+  userId: string;
+  passwordHash: string;
+  mustChangePassword?: boolean;
+}) {
+  const values = {
+    passwordHash: input.passwordHash,
+    updatedAt: new Date(),
+    ...(typeof input.mustChangePassword === "boolean"
+      ? { mustChangePassword: input.mustChangePassword }
+      : {}),
+  };
+
   const [updated] = await db
     .update(demoUsers)
-    .set({
-      passwordHash: input.passwordHash,
-      updatedAt: new Date(),
-    })
+    .set(values)
     .where(eq(demoUsers.id, input.userId))
     .returning({
       id: demoUsers.id,
+      mustChangePassword: demoUsers.mustChangePassword,
     });
 
   return updated ?? null;
@@ -249,113 +259,6 @@ export async function fillMissingDemoUserPasswordHashes(passwordHash: string) {
     .returning({ id: demoUsers.id });
 
   return updated.length;
-}
-
-export async function createDemoInvite(input: {
-  email: string;
-  role: string;
-  token: string;
-  expiresAt: Date;
-}) {
-  const email = input.email.toLowerCase();
-  const tokenHash = hashInviteToken(input.token);
-  await db.delete(demoInvites).where(eq(demoInvites.email, email));
-
-  const [created] = await db
-    .insert(demoInvites)
-    .values({
-      email,
-      role: input.role,
-      token: null,
-      tokenHash,
-      expiresAt: input.expiresAt,
-    })
-    .returning({
-      id: demoInvites.id,
-      email: demoInvites.email,
-      role: demoInvites.role,
-      tokenHash: demoInvites.tokenHash,
-      expiresAt: demoInvites.expiresAt,
-      createdAt: demoInvites.createdAt,
-    });
-
-  if (!created) return null;
-  return {
-    ...created,
-    token: input.token,
-  };
-}
-
-export async function getDemoInviteByToken(token: string) {
-  const tokenHash = hashInviteToken(token);
-
-  const [hashedInvite] = await db
-    .select({
-      id: demoInvites.id,
-      email: demoInvites.email,
-      role: demoInvites.role,
-      token: demoInvites.token,
-      tokenHash: demoInvites.tokenHash,
-      expiresAt: demoInvites.expiresAt,
-      createdAt: demoInvites.createdAt,
-    })
-    .from(demoInvites)
-    .where(eq(demoInvites.tokenHash, tokenHash))
-    .limit(1);
-
-  if (hashedInvite?.tokenHash && constantTimeMatch(hashedInvite.tokenHash, tokenHash)) {
-    return hashedInvite;
-  }
-
-  const [legacyInvite] = await db
-    .select({
-      id: demoInvites.id,
-      email: demoInvites.email,
-      role: demoInvites.role,
-      token: demoInvites.token,
-      tokenHash: demoInvites.tokenHash,
-      expiresAt: demoInvites.expiresAt,
-      createdAt: demoInvites.createdAt,
-    })
-    .from(demoInvites)
-    .where(eq(demoInvites.token, token))
-    .limit(1);
-
-  if (!legacyInvite?.token || !constantTimeMatch(legacyInvite.token, token)) {
-    return null;
-  }
-
-  const [backfilled] = await db
-    .update(demoInvites)
-    .set({
-      tokenHash,
-      token: null,
-    })
-    .where(eq(demoInvites.id, legacyInvite.id))
-    .returning({
-      id: demoInvites.id,
-      email: demoInvites.email,
-      role: demoInvites.role,
-      token: demoInvites.token,
-      tokenHash: demoInvites.tokenHash,
-      expiresAt: demoInvites.expiresAt,
-      createdAt: demoInvites.createdAt,
-    });
-
-  return (
-    backfilled ?? {
-      ...legacyInvite,
-      token: null,
-      tokenHash,
-    }
-  );
-}
-
-export async function consumeDemoInvite(inviteId: string) {
-  const deleted = await db.delete(demoInvites).where(eq(demoInvites.id, inviteId)).returning({
-    id: demoInvites.id,
-  });
-  return deleted.length > 0;
 }
 
 export async function listRecentDemoActivity(limit?: number) {

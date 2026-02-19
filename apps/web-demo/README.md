@@ -27,7 +27,7 @@ corepack pnpm run typecheck
 DATABASE_URL=postgres://postgres:postgres@localhost:55432/reactiveweb
 AUTH_SECRET=replace-with-16+-char-secret
 AUTH_DEMO_PASSWORD=replace-with-demo-password
-VITE_DEMO_ADMIN_EMAIL=admin@reactiveweb.dev
+VITE_DEMO_OWNER_USERNAME=owner
 ```
 
 Recommended local DB bootstrap:
@@ -46,10 +46,9 @@ docker run -d \
 ## Auth Domain Model
 
 - Credentials are verified against per-user password hashes in `demo_users.password_hash`.
-- `AUTH_DEMO_PASSWORD` is used for deterministic local bootstrap/new-user default credentials.
-- Tradeoff:
-  - Pro: avoids a single process-wide plaintext equality check for authentication.
-  - Con: demo users share one bootstrap secret unless you add a password-reset UI/flow.
+- Authentication is username/password only.
+- Public self-signup creates viewer users.
+- Owner/admin user creation and password reset flows are direct (no invite links).
 
 ## Deterministic Local Bootstrap
 
@@ -80,7 +79,7 @@ flowchart LR
   B --> C["server fetches Auth.js CSRF state"]
   C --> D["forward POST /api/auth/callback/credentials"]
   D --> E["Auth.js authorize"]
-  E --> F["load demo user by email"]
+  E --> F["load demo user by username"]
   F --> G["verify password hash"]
   G --> H["issue JWT session cookie"]
   H --> I["protected loaders/actions use requireAuthSession"]

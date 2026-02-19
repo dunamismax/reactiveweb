@@ -11,15 +11,15 @@ async function main() {
     DATABASE_URL: process.env.DATABASE_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_DEMO_PASSWORD: process.env.AUTH_DEMO_PASSWORD,
-    VITE_DEMO_ADMIN_EMAIL: process.env.VITE_DEMO_ADMIN_EMAIL,
+    VITE_DEMO_OWNER_USERNAME: process.env.VITE_DEMO_OWNER_USERNAME,
   });
 
   const passwordHash = hashBootstrapPassword(env.AUTH_DEMO_PASSWORD);
-  await ensureDemoWorkspaceSeed(env.VITE_DEMO_ADMIN_EMAIL, passwordHash);
+  await ensureDemoWorkspaceSeed(env.VITE_DEMO_OWNER_USERNAME, passwordHash);
   const backfilledCount = await fillMissingDemoUserPasswordHashes(passwordHash);
 
   console.log(
-    `web-demo seed complete: admin=${env.VITE_DEMO_ADMIN_EMAIL}, backfilled_password_hashes=${backfilledCount}`,
+    `web-demo seed complete: owner=${env.VITE_DEMO_OWNER_USERNAME}, backfilled_password_hashes=${backfilledCount}`,
   );
   process.exit(0);
 }

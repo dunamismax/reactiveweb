@@ -1,5 +1,5 @@
 import {
-  createDemoInvite,
+  createDemoUser,
   getDemoUserById,
   listDemoUsers,
   updateDemoUserRole,
@@ -25,12 +25,13 @@ import {
   requireAuthSession,
 } from "~/lib/demo-state.server";
 import {
+  createUserInputSchema,
   type DemoUser,
-  inviteUserInputSchema,
   type Role,
   toRole,
   usersActionSchema,
 } from "~/lib/models";
+import { hashPassword } from "~/lib/password.server";
 import { errorPayload } from "~/lib/server-responses";
 import type { Route } from "./+types/users";
 
@@ -131,43 +132,44 @@ export async function action({ request }: Route.ActionArgs) {
     );
   }
 
-  if (parsed.data.intent === "inviteUser") {
-    const parsedInvite = inviteUserInputSchema.safeParse(parsed.data);
-    if (!parsedInvite.success) {
+  if (parsed.data.intent === "createUser") {
+    const parsedCreate = createUserInputSchema.safeParse(parsed.data);
+    if (!parsedCreate.success) {
       return errorPayload(
         "BAD_REQUEST",
-        parsedInvite.error.issues[0]?.message ?? "Invalid invite payload.",
+        parsedCreate.error.issues[0]?.message ?? "Invalid user payload.",
       );
     }
 
-    assertCanCreateUser(session.user, parsedInvite.data.role);
+    if (parsedCreate.data.password !== parsedCreate.data.confirmPassword) {
+      return errorPayload("BAD_REQUEST", "Password confirmation does not match.");
+    }
 
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
-    const token = crypto.randomUUID().replaceAll("-", "");
-    const invite = await createDemoInvite({
-      email: parsedInvite.data.email,
-      role: parsedInvite.data.role,
-      token,
-      expiresAt,
+    assertCanCreateUser(session.user, parsedCreate.data.role);
+
+    const created = await createDemoUser({
+      name: parsedCreate.data.name,
+      username: parsedCreate.data.username,
+      role: parsedCreate.data.role,
+      passwordHash: hashPassword(parsedCreate.data.password),
+      mustChangePassword: true,
     });
-    if (!invite) {
-      return errorPayload("INTERNAL_ERROR", "Unable to generate invite.");
+
+    if (!created) {
+      return errorPayload("BAD_REQUEST", "Unable to create user. Username may already exist.");
     }
 
     await recordAuditEvent({
       actorId: session.user.id,
-      action: "Invited",
-      target: `user ${invite.email}`,
-      details: `${session.user.name} generated invite for ${invite.email} (${invite.role})`,
+      action: "Created",
+      target: `user ${created.username}`,
+      details: `${session.user.username} created ${created.username} (${created.role})`,
     });
 
-    const inviteUrl = new URL(`/invite/${invite.token}`, request.url).toString();
     return {
       ok: true,
-      message: "Invite link generated.",
-      inviteUrl,
-      inviteExpiresAt: invite.expiresAt.toISOString(),
-      intent: "inviteUser" as const,
+      message: "User created. Password rotation is required on first sign-in.",
+      intent: "createUser" as const,
     };
   }
 
@@ -194,8 +196,8 @@ export async function action({ request }: Route.ActionArgs) {
     await recordAuditEvent({
       actorId: session.user.id,
       action: "Updated",
-      target: `${current.email} role`,
-      details: `${session.user.name} changed role to ${role}`,
+      target: `${current.username} role`,
+      details: `${session.user.username} changed role to ${role}`,
     });
 
     return { ok: true, message: "Role updated.", intent: "cycleRole" as const };
@@ -207,8 +209,8 @@ export async function action({ request }: Route.ActionArgs) {
   await recordAuditEvent({
     actorId: session.user.id,
     action: nextActive ? "Activated" : "Suspended",
-    target: current.email,
-    details: `${session.user.name} set status to ${nextActive ? "active" : "suspended"}`,
+    target: current.username,
+    details: `${session.user.username} set status to ${nextActive ? "active" : "suspended"}`,
   });
 
   return { ok: true, message: "Status updated.", intent: "toggleStatus" as const };
@@ -217,10 +219,11 @@ export async function action({ request }: Route.ActionArgs) {
 export default function UsersRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { users } = loaderData;
 
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<Role>("viewer");
-  const [latestInviteUrl, setLatestInviteUrl] = useState("");
-  const [latestInviteExpiresAt, setLatestInviteExpiresAt] = useState("");
   const [search, setSearch] = useState("");
   const [sortColumn, setSortColumn] = useState<SortColumn>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -236,26 +239,17 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
     if (!actionData) return;
     if ("ok" in actionData && actionData.ok) {
       addToast(actionData.message, "success");
-      if (actionData.intent === "inviteUser") {
-        setEmail("");
+      if (actionData.intent === "createUser") {
+        setName("");
+        setUsername("");
+        setPassword("");
+        setConfirmPassword("");
         setRole("viewer");
-        setLatestInviteUrl(actionData.inviteUrl);
-        setLatestInviteExpiresAt(actionData.inviteExpiresAt);
       }
     } else if ("error" in actionData) {
       addToast(actionData.error.message, "error");
     }
   }, [actionData, addToast]);
-
-  async function copyInviteLink() {
-    if (!latestInviteUrl) return;
-    try {
-      await navigator.clipboard.writeText(latestInviteUrl);
-      addToast("Invite link copied to clipboard.", "info");
-    } catch {
-      addToast("Unable to copy invite link.", "warning");
-    }
-  }
 
   function handleSort(col: SortColumn) {
     if (sortColumn === col) {
@@ -302,7 +296,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
     return users.filter(
       (u) =>
         u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
+        u.username.toLowerCase().includes(q) ||
         u.role.toLowerCase().includes(q) ||
         u.status.toLowerCase().includes(q),
     );
@@ -333,16 +327,25 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1.5fr]">
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-sm font-medium">Invite User</p>
+          <p className="text-sm font-medium">Create User</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Owner/admin accounts can provision users directly with a temporary password.
+          </p>
           <Form className="mt-3 grid gap-3" method="post">
-            <input name="intent" type="hidden" value="inviteUser" />
+            <input name="intent" type="hidden" value="createUser" />
             <InputField
-              label="Email"
-              name="email"
-              onChange={(event) => setEmail((event.target as HTMLInputElement).value)}
-              placeholder="jordan@reactiveweb.dev"
-              type="email"
-              value={email}
+              label="Name"
+              name="name"
+              onChange={(event) => setName((event.target as HTMLInputElement).value)}
+              required
+              value={name}
+            />
+            <InputField
+              label="Username"
+              name="username"
+              onChange={(event) => setUsername((event.target as HTMLInputElement).value)}
+              required
+              value={username}
             />
             <SelectField
               label="Role"
@@ -351,35 +354,30 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
               options={roleOptions}
               value={role}
             />
+            <InputField
+              autoComplete="new-password"
+              label="Temporary Password"
+              minLength={8}
+              name="password"
+              onChange={(event) => setPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={password}
+            />
+            <InputField
+              autoComplete="new-password"
+              label="Confirm Password"
+              minLength={8}
+              name="confirmPassword"
+              onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={confirmPassword}
+            />
             <Button disabled={isSubmitting} type="submit">
-              Generate Invite Link
+              Create User
             </Button>
           </Form>
-
-          {latestInviteUrl ? (
-            <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--overlay-soft)] p-3">
-              <p className="text-xs tracking-[0.15em] text-[var(--muted)] uppercase">
-                Latest Invite
-              </p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Expires: {new Date(latestInviteExpiresAt).toLocaleString("en-US")}
-              </p>
-              <div className="mt-2 flex gap-2">
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--muted)]"
-                  readOnly
-                  value={latestInviteUrl}
-                />
-                <button
-                  className="nav-transition rounded-lg border border-[var(--border)] px-3 py-2 text-xs hover:bg-[var(--surface)]"
-                  onClick={copyInviteLink}
-                  type="button"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-          ) : null}
         </article>
 
         <div className="grid gap-3">
@@ -399,7 +397,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
           {sortedUsers.length === 0 && !isLoading ? (
             <EmptyState
               description={
-                search ? "Try a different search term." : "Generate an invite link to get started."
+                search ? "Try a different search term." : "Create a user to get started."
               }
               title={search ? "No users match your search" : "No users yet"}
             />
@@ -484,7 +482,12 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
                               <p className="font-medium transition-colors hover:text-[var(--accent)]">
                                 {user.name}
                               </p>
-                              <p className="text-xs text-[var(--muted)]">{user.email}</p>
+                              <p className="text-xs text-[var(--muted)]">@{user.username}</p>
+                              {user.mustChangePassword ? (
+                                <p className="text-xs text-[var(--tone-warning-fg)]">
+                                  Password update required
+                                </p>
+                              ) : null}
                             </Link>
                           </td>
                           <td className="px-4 py-3 align-top">

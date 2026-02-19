@@ -1,7 +1,7 @@
 import { getDemoUserById, updateDemoUserName, updateDemoUserPassword } from "@reactiveweb/db";
 import { Button } from "@reactiveweb/ui";
 import { useEffect, useMemo, useState } from "react";
-import { Form, useNavigation } from "react-router";
+import { Form, useNavigation, useSearchParams } from "react-router";
 import { DataList } from "~/components/data-list";
 import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
@@ -36,7 +36,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     profile: {
       id: dbUser.id,
       name: dbUser.name,
-      email: dbUser.email,
+      username: dbUser.username,
+      mustChangePassword: dbUser.mustChangePassword,
       role: dbUser.role,
       lastSeenAt: dbUser.lastSeenAt ? dbUser.lastSeenAt.toISOString() : null,
     },
@@ -75,8 +76,8 @@ export async function action({ request }: Route.ActionArgs) {
     await recordAuditEvent({
       actorId: session.user.id,
       action: "Updated",
-      target: `${dbUser.email} profile`,
-      details: `${session.user.name} changed display name to ${parsed.data.name}`,
+      target: `${dbUser.username} profile`,
+      details: `${session.user.username} changed display name to ${parsed.data.name}`,
     });
 
     return {
@@ -101,6 +102,7 @@ export async function action({ request }: Route.ActionArgs) {
   const updatedPassword = await updateDemoUserPassword({
     userId: session.user.id,
     passwordHash: hashPassword(parsed.data.newPassword),
+    mustChangePassword: false,
   });
 
   if (!updatedPassword) {
@@ -110,8 +112,8 @@ export async function action({ request }: Route.ActionArgs) {
   await recordAuditEvent({
     actorId: session.user.id,
     action: "Updated",
-    target: `${dbUser.email} password`,
-    details: `${session.user.name} changed account password`,
+    target: `${dbUser.username} password`,
+    details: `${session.user.username} changed account password`,
   });
 
   return {
@@ -124,6 +126,7 @@ export async function action({ request }: Route.ActionArgs) {
 export default function SettingsRoute({ actionData, loaderData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const { addToast } = useToast();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState(loaderData.profile.name);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -169,6 +172,8 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
   const isSubmittingPassword =
     navigation.state === "submitting" && navigation.formData?.get("intent") === "changePassword";
 
+  const forcedByGuard = searchParams.get("required") === "password-change";
+
   return (
     <section>
       <SectionHeader
@@ -177,6 +182,12 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
         title="User Settings"
       />
 
+      {loaderData.profile.mustChangePassword || forcedByGuard ? (
+        <div className="mt-4 rounded-xl border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] p-4 text-sm text-[var(--tone-warning-fg)]">
+          Your password must be changed before you can access other routes.
+        </div>
+      ) : null}
+
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Profile</p>
@@ -184,7 +195,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
             <DataList
               items={[
                 { label: "Name", value: optimisticName },
-                { label: "Email", value: loaderData.profile.email },
+                { label: "Username", value: loaderData.profile.username },
                 { label: "Role", value: loaderData.profile.role },
                 { label: "Last Seen", value: formatTimestamp(loaderData.profile.lastSeenAt) },
               ]}

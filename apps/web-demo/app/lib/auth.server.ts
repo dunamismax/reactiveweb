@@ -1,7 +1,7 @@
 import { Auth, type AuthConfig } from "@auth/core";
 import Credentials from "@auth/core/providers/credentials";
 import type { Session } from "@auth/core/types";
-import { getDemoUserByEmail, markDemoUserSeen } from "@reactiveweb/db";
+import { getDemoUserByUsername, markDemoUserSeen } from "@reactiveweb/db";
 
 import { demoAuthUiConfig, sanitizeCallbackPath, validateSignInPayload } from "./auth-config";
 import { demoServerEnv } from "./env.server";
@@ -101,14 +101,14 @@ export const authConfig: AuthConfig = {
     Credentials({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         const parsed = validateSignInPayload(credentials);
         if (!parsed.success) return null;
 
-        const user = await getDemoUserByEmail(parsed.data.email);
+        const user = await getDemoUserByUsername(parsed.data.username);
         if (!user || !user.active || !user.passwordHash) return null;
         if (!verifyPassword(parsed.data.password, user.passwordHash)) return null;
 
@@ -116,7 +116,6 @@ export const authConfig: AuthConfig = {
         return {
           id: user.id,
           name: user.name,
-          email: user.email,
           role: user.role,
         };
       },
@@ -129,7 +128,6 @@ export const authConfig: AuthConfig = {
         token.sub = user.id;
         token.role = userWithRole.role;
         token.name = user.name;
-        token.email = user.email;
       }
 
       return token;
@@ -235,7 +233,7 @@ export async function forwardAuthFormPost(
 
 export async function forwardSignIn(
   request: Request,
-  email: string,
+  username: string,
   password: string,
   callbackPath: string,
 ) {
@@ -257,7 +255,7 @@ export async function forwardSignIn(
     request,
     "/api/auth/callback/credentials",
     new URLSearchParams({
-      email,
+      username,
       password,
       csrfToken: csrf.csrfToken,
       callbackUrl: sanitizeCallbackPath(callbackPath, demoAuthUiConfig.signInCallbackPath),

@@ -36,7 +36,7 @@ const mockDemoServerEnv = {
   DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
   AUTH_SECRET: "replace-with-16+-char-secret",
   AUTH_DEMO_PASSWORD: "demo-pass-123",
-  VITE_DEMO_ADMIN_EMAIL: "admin@reactiveweb.dev",
+  VITE_DEMO_OWNER_USERNAME: "owner",
 };
 
 vi.mock("@reactiveweb/db", () => db);

@@ -28,7 +28,7 @@ export function assertCanCreateUser(actor: Actor, desiredRole: Role) {
 export function assertCanMutateUser(
   actor: Actor,
   target: TargetUser,
-  intent: "cycleRole" | "toggleStatus",
+  intent: "cycleRole" | "toggleStatus" | "resetPassword",
 ) {
   if (!canManageUsers(actor.role)) {
     throwRouteError(403, "FORBIDDEN", "Only owner/admin accounts can update users.");
@@ -38,7 +38,9 @@ export function assertCanMutateUser(
     const message =
       intent === "cycleRole"
         ? "You cannot change your own role."
-        : "You cannot change your own status.";
+        : intent === "toggleStatus"
+          ? "You cannot change your own status."
+          : "Use Settings to change your own password.";
     throwRouteError(403, "FORBIDDEN", message);
   }
 

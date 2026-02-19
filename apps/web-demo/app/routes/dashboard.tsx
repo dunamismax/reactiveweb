@@ -242,7 +242,7 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
           to="/users"
         >
           <p className="font-medium">User Management</p>
-          <p className="mt-1 text-[var(--muted)]">Invite and manage workspace members</p>
+          <p className="mt-1 text-[var(--muted)]">Create and manage workspace members</p>
         </Link>
         <Link
           className="card-hover rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm"

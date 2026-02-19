@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
 export type Role = z.infer<typeof roleSchema>;
+
 export function toRole(value: string): Role {
   if (value === "owner" || value === "admin" || value === "editor" || value === "viewer") {
     return value;
@@ -10,13 +11,34 @@ export function toRole(value: string): Role {
   return "viewer";
 }
 
+const usernameRegex = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
+
+export const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3, "Username must be at least 3 characters.")
+  .max(32, "Username must be 32 characters or less.")
+  .regex(
+    usernameRegex,
+    "Use lowercase letters, numbers, dots, underscores, or hyphens. Start/end with a letter or number.",
+  );
+
+export const nameSchema = z.string().trim().min(2, "Name must be at least 2 characters.").max(80);
+
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters.")
+  .max(128, "Password must be 128 characters or less.");
+
 export const userStatusSchema = z.enum(["active", "suspended"]);
 export type UserStatus = z.infer<typeof userStatusSchema>;
 
 export const demoUserSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(2),
-  email: z.string().email(),
+  name: nameSchema,
+  username: usernameSchema,
+  mustChangePassword: z.boolean(),
   role: roleSchema,
   status: userStatusSchema,
   createdAt: z.string(),
@@ -25,30 +47,41 @@ export const demoUserSchema = z.object({
 export type DemoUser = z.infer<typeof demoUserSchema>;
 
 export const createUserInputSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  email: z.string().email("Enter a valid email address."),
+  name: nameSchema,
+  username: usernameSchema,
   role: roleSchema,
+  password: passwordSchema,
+  confirmPassword: passwordSchema,
 });
 export type CreateUserInput = z.infer<typeof createUserInputSchema>;
 
-export const inviteUserInputSchema = z.object({
-  email: z.string().email("Enter a valid email address."),
-  role: roleSchema,
+export const signUpInputSchema = z.object({
+  username: usernameSchema,
+  name: nameSchema,
+  password: passwordSchema,
+  confirmPassword: passwordSchema,
 });
-export type InviteUserInput = z.infer<typeof inviteUserInputSchema>;
+export type SignUpInput = z.infer<typeof signUpInputSchema>;
 
 export const signInInputSchema = z.object({
-  email: z.string().email("Use a valid email address."),
-  password: z.string().min(8, "Password must be at least 8 characters."),
+  username: usernameSchema,
+  password: passwordSchema,
 });
 export type SignInInput = z.infer<typeof signInInputSchema>;
 
 export const authActionSchema = z.discriminatedUnion("intent", [
   z.object({
     intent: z.literal("signIn"),
-    email: z.string().email("Use a valid email address."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
+    username: usernameSchema,
+    password: passwordSchema,
     callbackUrl: z.string().optional(),
+  }),
+  z.object({
+    intent: z.literal("signUp"),
+    username: usernameSchema,
+    name: nameSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
   }),
   z.object({
     intent: z.literal("signOut"),
@@ -58,9 +91,12 @@ export const authActionSchema = z.discriminatedUnion("intent", [
 
 export const usersActionSchema = z.discriminatedUnion("intent", [
   z.object({
-    intent: z.literal("inviteUser"),
-    email: z.string().email("Enter a valid email address."),
+    intent: z.literal("createUser"),
+    name: nameSchema,
+    username: usernameSchema,
     role: roleSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
   }),
   z.object({
     intent: z.literal("cycleRole"),
@@ -72,23 +108,35 @@ export const usersActionSchema = z.discriminatedUnion("intent", [
   }),
 ]);
 
-export const settingsActionSchema = z.discriminatedUnion("intent", [
+export const userDetailActionSchema = z.discriminatedUnion("intent", [
   z.object({
-    intent: z.literal("updateProfile"),
-    name: z.string().min(2, "Name must be at least 2 characters."),
+    intent: z.literal("cycleRole"),
+    userId: z.string().uuid("Invalid user id."),
   }),
   z.object({
-    intent: z.literal("changePassword"),
-    currentPassword: z.string().min(8, "Current password must be at least 8 characters."),
-    newPassword: z.string().min(8, "New password must be at least 8 characters."),
-    confirmPassword: z.string().min(8, "Confirmation password must be at least 8 characters."),
+    intent: z.literal("toggleStatus"),
+    userId: z.string().uuid("Invalid user id."),
+  }),
+  z.object({
+    intent: z.literal("resetPassword"),
+    userId: z.string().uuid("Invalid user id."),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
   }),
 ]);
 
-export const inviteAcceptSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters."),
-  confirmPassword: z.string().min(8, "Confirmation password must be at least 8 characters."),
-});
+export const settingsActionSchema = z.discriminatedUnion("intent", [
+  z.object({
+    intent: z.literal("updateProfile"),
+    name: nameSchema,
+  }),
+  z.object({
+    intent: z.literal("changePassword"),
+    currentPassword: passwordSchema,
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+  }),
+]);
 
 export type ActivityEvent = {
   id: string;

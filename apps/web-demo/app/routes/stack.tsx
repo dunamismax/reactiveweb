@@ -1,4 +1,4 @@
-import { appProjects, demoAuditLogs, demoInvites, demoUsers } from "@reactiveweb/db/schema";
+import { appProjects, demoAuditLogs, demoUsers } from "@reactiveweb/db/schema";
 import { getTableName } from "drizzle-orm";
 import { DataList } from "~/components/data-list";
 import { SectionHeader } from "~/components/section-header";
@@ -47,7 +47,6 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
     getTableName(appProjects),
     getTableName(demoUsers),
     getTableName(demoAuditLogs),
-    getTableName(demoInvites),
   ];
 
   return (
@@ -89,6 +88,7 @@ export default function StackRoute({ loaderData }: Route.ComponentProps) {
               items={[
                 { label: "App Name", value: demoEnv.VITE_APP_NAME },
                 { label: "Auth Demo Enabled", value: String(demoEnv.VITE_ENABLE_AUTH_DEMO) },
+                { label: "Owner Username", value: demoEnv.VITE_DEMO_OWNER_USERNAME },
                 { label: "NODE_ENV", value: demoEnv.NODE_ENV },
                 {
                   label: "DATABASE_URL",

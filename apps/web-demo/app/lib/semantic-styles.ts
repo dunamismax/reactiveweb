@@ -45,7 +45,7 @@ export function statusBadgeVariant(status: string): BadgeVariant {
 
 export function actionBadgeVariant(action: string): BadgeVariant {
   const normalized = action.toLowerCase();
-  if (normalized === "created" || normalized === "invited") return "admin";
+  if (normalized === "created") return "admin";
   if (normalized === "updated") return "editor";
   if (normalized === "activated") return "active";
   if (normalized === "suspended") return "suspended";

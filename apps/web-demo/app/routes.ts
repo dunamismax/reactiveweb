@@ -2,7 +2,6 @@ import { index, layout, type RouteConfig, route } from "@react-router/dev/routes
 
 export default [
   route("api/auth/*", "routes/api-auth.ts"),
-  route("invite/:token", "routes/invite.$token.tsx"),
   layout("routes/dashboard-layout.tsx", [
     index("routes/dashboard.tsx"),
     route("dashboard", "routes/dashboard-redirect.ts"),

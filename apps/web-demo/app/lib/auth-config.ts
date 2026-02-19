@@ -1,4 +1,4 @@
-import { signInInputSchema } from "./models";
+import { signInInputSchema, signUpInputSchema } from "./models";
 
 export const demoAuthUiConfig = {
   sessionStrategy: "jwt",
@@ -10,6 +10,10 @@ export const demoAuthUiConfig = {
 
 export function validateSignInPayload(input: unknown) {
   return signInInputSchema.safeParse(input);
+}
+
+export function validateSignUpPayload(input: unknown) {
+  return signUpInputSchema.safeParse(input);
 }
 
 export function sanitizeCallbackPath(

@@ -15,7 +15,13 @@ const { VALID_ACTOR_ID, db, demoState } = vi.hoisted(() => {
     demoState: {
       recordAuditEvent: vi.fn(async () => null),
       requireAuthSession: vi.fn(async () => ({
-        user: { id: VALID_ACTOR_ID, name: "Owner", role: "owner" },
+        user: {
+          id: VALID_ACTOR_ID,
+          name: "Owner",
+          username: "owner",
+          role: "owner",
+          mustChangePassword: false,
+        },
       })),
     },
   };
@@ -46,18 +52,25 @@ describe("settings action", () => {
     demoState.requireAuthSession.mockReset();
 
     demoState.requireAuthSession.mockResolvedValue({
-      user: { id: VALID_ACTOR_ID, name: "Owner", role: "owner" },
+      user: {
+        id: VALID_ACTOR_ID,
+        name: "Owner",
+        username: "owner",
+        role: "owner",
+        mustChangePassword: false,
+      },
     });
   });
 
   it("updates display name", async () => {
     db.getDemoUserById.mockResolvedValue({
       id: VALID_ACTOR_ID,
-      email: "owner@reactiveweb.dev",
+      username: "owner",
       name: "Owner",
       role: "owner",
       active: true,
       passwordHash: hashPassword("current-pass-123"),
+      mustChangePassword: false,
       lastSeenAt: new Date(),
     });
     db.updateDemoUserName.mockResolvedValue({ id: VALID_ACTOR_ID });
@@ -85,11 +98,12 @@ describe("settings action", () => {
   it("rejects invalid profile payload", async () => {
     db.getDemoUserById.mockResolvedValue({
       id: VALID_ACTOR_ID,
-      email: "owner@reactiveweb.dev",
+      username: "owner",
       name: "Owner",
       role: "owner",
       active: true,
       passwordHash: hashPassword("current-pass-123"),
+      mustChangePassword: false,
       lastSeenAt: new Date(),
     });
 
@@ -111,11 +125,12 @@ describe("settings action", () => {
   it("rejects password change when current password is wrong", async () => {
     db.getDemoUserById.mockResolvedValue({
       id: VALID_ACTOR_ID,
-      email: "owner@reactiveweb.dev",
+      username: "owner",
       name: "Owner",
       role: "owner",
       active: true,
       passwordHash: hashPassword("current-pass-123"),
+      mustChangePassword: true,
       lastSeenAt: new Date(),
     });
 
@@ -136,17 +151,18 @@ describe("settings action", () => {
     expect(response.error.code).toBe("FORBIDDEN");
   });
 
-  it("updates password when payload is valid", async () => {
+  it("updates password and clears mustChangePassword", async () => {
     db.getDemoUserById.mockResolvedValue({
       id: VALID_ACTOR_ID,
-      email: "owner@reactiveweb.dev",
+      username: "owner",
       name: "Owner",
       role: "owner",
       active: true,
       passwordHash: hashPassword("current-pass-123"),
+      mustChangePassword: true,
       lastSeenAt: new Date(),
     });
-    db.updateDemoUserPassword.mockResolvedValue({ id: VALID_ACTOR_ID });
+    db.updateDemoUserPassword.mockResolvedValue({ id: VALID_ACTOR_ID, mustChangePassword: false });
 
     const response = await settingsRoute.action({
       request: buildPostRequest("/settings", {
@@ -164,6 +180,11 @@ describe("settings action", () => {
     }
     expect(response.intent).toBe("changePassword");
     expect(db.updateDemoUserPassword).toHaveBeenCalledTimes(1);
+    expect(db.updateDemoUserPassword).toHaveBeenCalledWith({
+      userId: VALID_ACTOR_ID,
+      passwordHash: expect.any(String),
+      mustChangePassword: false,
+    });
     expect(demoState.recordAuditEvent).toHaveBeenCalledTimes(1);
   });
 });

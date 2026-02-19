@@ -2,12 +2,12 @@ import {
   getDemoUserById,
   listDemoUsers,
   listRecentDemoActivity,
+  updateDemoUserPassword,
   updateDemoUserRole,
   updateDemoUserStatus,
 } from "@reactiveweb/db";
 import { useEffect, useState } from "react";
-import { Link, useNavigation, useSubmit } from "react-router";
-import { z } from "zod";
+import { Form, Link, useNavigation, useSubmit } from "react-router";
 import { Avatar } from "~/components/avatar";
 import {
   actionBadgeVariant,
@@ -16,6 +16,7 @@ import {
   statusBadgeVariant,
 } from "~/components/badge";
 import { ConfirmDialog } from "~/components/confirm-dialog";
+import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
 import { useToast } from "~/components/toast";
 import { assertCanMutateUser } from "~/lib/authorization.server";
@@ -26,14 +27,10 @@ import {
   recordAuditEvent,
   requireAuthSession,
 } from "~/lib/demo-state.server";
-import { type Role, toRole } from "~/lib/models";
+import { type Role, toRole, userDetailActionSchema } from "~/lib/models";
+import { hashPassword } from "~/lib/password.server";
 import { errorPayload } from "~/lib/server-responses";
 import type { Route } from "./+types/user-detail";
-
-const userDetailActionSchema = z.object({
-  intent: z.enum(["cycleRole", "toggleStatus"]),
-  userId: z.string().uuid("Invalid user id."),
-});
 
 type PendingAction = {
   intent: "cycleRole" | "toggleStatus";
@@ -91,7 +88,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const userActivity = allActivity
     .filter(
       (row) =>
-        row.actorId === dbUser.id || row.target.toLowerCase().includes(dbUser.email.toLowerCase()),
+        row.actorId === dbUser.id ||
+        row.target.toLowerCase().includes(dbUser.username.toLowerCase()),
     )
     .slice(0, 20)
     .map(mapDbActivityToEvent);
@@ -129,26 +127,53 @@ export async function action({ request }: Route.ActionArgs) {
     await recordAuditEvent({
       actorId: session.user.id,
       action: "Updated",
-      target: `${current.email} role`,
-      details: `${session.user.name} changed role to ${role}`,
+      target: `${current.username} role`,
+      details: `${session.user.username} changed role to ${role}`,
     });
     return { ok: true, message: "Role updated." };
   }
 
-  const nextActive = !current.active;
-  await updateDemoUserStatus({ userId, active: nextActive });
+  if (intent === "toggleStatus") {
+    const nextActive = !current.active;
+    await updateDemoUserStatus({ userId, active: nextActive });
+    await recordAuditEvent({
+      actorId: session.user.id,
+      action: nextActive ? "Activated" : "Suspended",
+      target: current.username,
+      details: `${session.user.username} set status to ${nextActive ? "active" : "suspended"}`,
+    });
+    return { ok: true, message: "Status updated." };
+  }
+
+  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
+    return errorPayload("BAD_REQUEST", "Password confirmation does not match.");
+  }
+
+  const updatedPassword = await updateDemoUserPassword({
+    userId,
+    passwordHash: hashPassword(parsed.data.newPassword),
+    mustChangePassword: true,
+  });
+
+  if (!updatedPassword) {
+    return errorPayload("NOT_FOUND", "User account not found.");
+  }
+
   await recordAuditEvent({
     actorId: session.user.id,
-    action: nextActive ? "Activated" : "Suspended",
-    target: current.email,
-    details: `${session.user.name} set status to ${nextActive ? "active" : "suspended"}`,
+    action: "Updated",
+    target: `${current.username} password`,
+    details: `${session.user.username} reset ${current.username}'s password and required rotation`,
   });
-  return { ok: true, message: "Status updated." };
+
+  return { ok: true, message: "Password reset. User must change it on next sign-in." };
 }
 
 export default function UserDetailRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { user, activity } = loaderData;
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
   const submit = useSubmit();
@@ -158,6 +183,8 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
     if (!actionData) return;
     if ("ok" in actionData && actionData.ok) {
       addToast(actionData.message, "success");
+      setNewPassword("");
+      setConfirmPassword("");
     } else if ("error" in actionData) {
       addToast(actionData.error.message, "error");
     }
@@ -191,6 +218,9 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
     setPendingAction(null);
   }
 
+  const isResetSubmitting =
+    navigation.state === "submitting" && navigation.formData?.get("intent") === "resetPassword";
+
   return (
     <section>
       <div className="flex items-center gap-2 border-b border-[var(--border)] pb-4">
@@ -206,10 +236,13 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
         <Avatar name={user.name} size="lg" />
         <div className="flex-1">
           <h2 className="text-2xl font-semibold tracking-tight">{user.name}</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">{user.email}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">@{user.username}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant={roleBadgeVariant(user.role)}>{user.role}</Badge>
             <Badge variant={statusBadgeVariant(user.status)}>{user.status}</Badge>
+            {user.mustChangePassword ? (
+              <Badge variant="default">password change required</Badge>
+            ) : null}
           </div>
         </div>
       </div>
@@ -218,6 +251,10 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-xs tracking-[0.15em] text-[var(--muted)] uppercase">Account Info</p>
           <dl className="mt-3 grid gap-2 text-sm">
+            <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
+              <dt className="text-[var(--muted)]">Username</dt>
+              <dd>@{user.username}</dd>
+            </div>
             <div className="flex justify-between gap-2 border-b border-[var(--border)] pb-2">
               <dt className="text-[var(--muted)]">Member since</dt>
               <dd>{formatDate(user.createdAt)}</dd>
@@ -236,7 +273,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-xs tracking-[0.15em] text-[var(--muted)] uppercase">Actions</p>
           <p className="mt-3 text-sm text-[var(--muted)]">
-            Click a control to change this user's role or status. Both require confirmation.
+            Click a control to change this user's role/status, or reset their password.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -260,6 +297,38 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
               {user.status === "active" ? "Suspend account" : "Activate account"}
             </button>
           </div>
+
+          <Form className="mt-4 grid gap-3" method="post">
+            <input name="intent" type="hidden" value="resetPassword" />
+            <input name="userId" type="hidden" value={user.id} />
+            <InputField
+              autoComplete="new-password"
+              label="Reset Password"
+              minLength={8}
+              name="newPassword"
+              onChange={(event) => setNewPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={newPassword}
+            />
+            <InputField
+              autoComplete="new-password"
+              label="Confirm Password"
+              minLength={8}
+              name="confirmPassword"
+              onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
+              required
+              type="password"
+              value={confirmPassword}
+            />
+            <button
+              className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)] disabled:opacity-40"
+              disabled={isResetSubmitting}
+              type="submit"
+            >
+              Reset Password
+            </button>
+          </Form>
         </article>
       </div>
 

@@ -49,7 +49,8 @@ corepack pnpm run demo:bootstrap
 corepack pnpm run dev
 ```
 
-`AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `web-demo` stores and verifies per-user password hashes in Postgres.
+`AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `VITE_DEMO_OWNER_USERNAME` controls the seeded owner username.
+`web-demo` stores and verifies per-user password hashes in Postgres.
 `55432` avoids collisions with existing local Postgres services bound to `5432`.
 
 ## Workspace Commands
