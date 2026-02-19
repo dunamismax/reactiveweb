@@ -4,7 +4,7 @@ function runCommand(args: string[]) {
   const packageManagerExec = process.env.npm_execpath;
   const runner = packageManagerExec?.includes("pnpm")
     ? { command: process.execPath, args: [packageManagerExec] }
-    : { command: "pnpm", args: [] };
+    : { command: "corepack", args: ["pnpm"] };
 
   return new Promise<void>((resolve, reject) => {
     const proc = spawn(runner.command, [...runner.args, ...args], {

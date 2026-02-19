@@ -73,12 +73,14 @@ Do not deviate from this stack unless Stephen explicitly approves:
 
 ### Next-Agent Handoff Prompt (Standard)
 
-- After completing work and reporting results, always ask Stephen whether to generate a handoff prompt for the next AI agent.
+- After major completed work and reporting results, ask Stephen whether to generate a handoff prompt for the next AI agent.
+- Major completed work means PR-level scope is done or changes were committed/pushed.
+- Do not ask after minor one-off tasks, quick clarifications, status updates, or no-change exchanges.
 - If Stephen says yes, generate a context-aware next-agent prompt that:
   - uses current repo/app state and recent changes,
   - prioritizes highest-value next steps,
   - includes concrete implementation goals, constraints, verification commands, and expected response format.
-- Treat this as part of the normal workflow for every completed task.
+- Treat this as part of the normal workflow for every major completed task.
 
 ### Live Iteration Loop (Default for Frontend Work)
 

@@ -8,12 +8,10 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
     "@react-router/node": "7.12.0",
-    "@react-router/serve": "7.12.0",
     "@reactiveweb/config": "workspace:*",
     "@reactiveweb/ui": "workspace:*",
     "clsx": "^2.1.1",

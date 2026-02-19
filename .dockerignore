@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.pnpm-store
+node_modules
+**/node_modules
+**/.react-router
+**/build
+dist
+coverage
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example

@@ -5,6 +5,6 @@ export default defineConfig({
   schema: "./src/schema/*.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/reactiveweb",
+    url: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:55432/reactiveweb",
   },
 });
