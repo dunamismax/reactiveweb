@@ -1,4 +1,15 @@
 import { z } from "zod";
+import {
+  AUTH_PASSWORD_MAX_LENGTH,
+  AUTH_PASSWORD_MIN_LENGTH,
+  AUTH_PASSWORD_POLICY_MESSAGE,
+  AUTH_USERNAME_MAX_LENGTH,
+  AUTH_USERNAME_MIN_LENGTH,
+  AUTH_USERNAME_POLICY_MESSAGE,
+  AUTH_USERNAME_REGEX,
+  getPasswordPolicyError,
+  normalizeUsername,
+} from "./auth-policy";
 
 export const roleSchema = z.enum(["owner", "admin", "editor", "viewer"]);
 export type Role = z.infer<typeof roleSchema>;
@@ -11,25 +22,33 @@ export function toRole(value: string): Role {
   return "viewer";
 }
 
-const usernameRegex = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
-
-export const usernameSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .min(3, "Username must be at least 3 characters.")
-  .max(32, "Username must be 32 characters or less.")
-  .regex(
-    usernameRegex,
-    "Use lowercase letters, numbers, dots, underscores, or hyphens. Start/end with a letter or number.",
-  );
+export const usernameSchema = z.preprocess(
+  (value) => (typeof value === "string" ? normalizeUsername(value) : value),
+  z
+    .string()
+    .min(
+      AUTH_USERNAME_MIN_LENGTH,
+      `Username must be at least ${AUTH_USERNAME_MIN_LENGTH} characters.`,
+    )
+    .max(
+      AUTH_USERNAME_MAX_LENGTH,
+      `Username must be ${AUTH_USERNAME_MAX_LENGTH} characters or less.`,
+    )
+    .regex(AUTH_USERNAME_REGEX, AUTH_USERNAME_POLICY_MESSAGE),
+);
 
 export const nameSchema = z.string().trim().min(2, "Name must be at least 2 characters.").max(80);
 
 export const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters.")
-  .max(128, "Password must be 128 characters or less.");
+  .min(
+    AUTH_PASSWORD_MIN_LENGTH,
+    `Password must be at least ${AUTH_PASSWORD_MIN_LENGTH} characters.`,
+  )
+  .max(AUTH_PASSWORD_MAX_LENGTH, `Password must be ${AUTH_PASSWORD_MAX_LENGTH} characters or less.`)
+  .refine((value) => !getPasswordPolicyError(value), {
+    message: AUTH_PASSWORD_POLICY_MESSAGE,
+  });
 
 export const userStatusSchema = z.enum(["active", "suspended"]);
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -46,21 +65,31 @@ export const demoUserSchema = z.object({
 });
 export type DemoUser = z.infer<typeof demoUserSchema>;
 
-export const createUserInputSchema = z.object({
-  name: nameSchema,
-  username: usernameSchema,
-  role: roleSchema,
-  password: passwordSchema,
-  confirmPassword: passwordSchema,
-});
+export const createUserInputSchema = z
+  .object({
+    name: nameSchema,
+    username: usernameSchema,
+    role: roleSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .refine((input) => input.password === input.confirmPassword, {
+    message: "Password confirmation does not match.",
+    path: ["confirmPassword"],
+  });
 export type CreateUserInput = z.infer<typeof createUserInputSchema>;
 
-export const signUpInputSchema = z.object({
-  username: usernameSchema,
-  name: nameSchema,
-  password: passwordSchema,
-  confirmPassword: passwordSchema,
-});
+export const signUpInputSchema = z
+  .object({
+    username: usernameSchema,
+    name: nameSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .refine((input) => input.password === input.confirmPassword, {
+    message: "Password confirmation does not match.",
+    path: ["confirmPassword"],
+  });
 export type SignUpInput = z.infer<typeof signUpInputSchema>;
 
 export const signInInputSchema = z.object({
@@ -76,13 +105,18 @@ export const authActionSchema = z.discriminatedUnion("intent", [
     password: passwordSchema,
     callbackUrl: z.string().optional(),
   }),
-  z.object({
-    intent: z.literal("signUp"),
-    username: usernameSchema,
-    name: nameSchema,
-    password: passwordSchema,
-    confirmPassword: passwordSchema,
-  }),
+  z
+    .object({
+      intent: z.literal("signUp"),
+      username: usernameSchema,
+      name: nameSchema,
+      password: passwordSchema,
+      confirmPassword: passwordSchema,
+    })
+    .refine((input) => input.password === input.confirmPassword, {
+      message: "Password confirmation does not match.",
+      path: ["confirmPassword"],
+    }),
   z.object({
     intent: z.literal("signOut"),
     callbackUrl: z.string().optional(),
@@ -90,14 +124,19 @@ export const authActionSchema = z.discriminatedUnion("intent", [
 ]);
 
 export const usersActionSchema = z.discriminatedUnion("intent", [
-  z.object({
-    intent: z.literal("createUser"),
-    name: nameSchema,
-    username: usernameSchema,
-    role: roleSchema,
-    password: passwordSchema,
-    confirmPassword: passwordSchema,
-  }),
+  z
+    .object({
+      intent: z.literal("createUser"),
+      name: nameSchema,
+      username: usernameSchema,
+      role: roleSchema,
+      password: passwordSchema,
+      confirmPassword: passwordSchema,
+    })
+    .refine((input) => input.password === input.confirmPassword, {
+      message: "Password confirmation does not match.",
+      path: ["confirmPassword"],
+    }),
   z.object({
     intent: z.literal("cycleRole"),
     userId: z.string().uuid("Invalid user id."),
@@ -117,12 +156,17 @@ export const userDetailActionSchema = z.discriminatedUnion("intent", [
     intent: z.literal("toggleStatus"),
     userId: z.string().uuid("Invalid user id."),
   }),
-  z.object({
-    intent: z.literal("resetPassword"),
-    userId: z.string().uuid("Invalid user id."),
-    newPassword: passwordSchema,
-    confirmPassword: passwordSchema,
-  }),
+  z
+    .object({
+      intent: z.literal("resetPassword"),
+      userId: z.string().uuid("Invalid user id."),
+      newPassword: passwordSchema,
+      confirmPassword: passwordSchema,
+    })
+    .refine((input) => input.newPassword === input.confirmPassword, {
+      message: "Password confirmation does not match.",
+      path: ["confirmPassword"],
+    }),
 ]);
 
 export const settingsActionSchema = z.discriminatedUnion("intent", [
@@ -130,12 +174,17 @@ export const settingsActionSchema = z.discriminatedUnion("intent", [
     intent: z.literal("updateProfile"),
     name: nameSchema,
   }),
-  z.object({
-    intent: z.literal("changePassword"),
-    currentPassword: passwordSchema,
-    newPassword: passwordSchema,
-    confirmPassword: passwordSchema,
-  }),
+  z
+    .object({
+      intent: z.literal("changePassword"),
+      currentPassword: passwordSchema,
+      newPassword: passwordSchema,
+      confirmPassword: passwordSchema,
+    })
+    .refine((input) => input.newPassword === input.confirmPassword, {
+      message: "New password confirmation does not match.",
+      path: ["confirmPassword"],
+    }),
 ]);
 
 export type ActivityEvent = {

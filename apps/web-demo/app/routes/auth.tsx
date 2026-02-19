@@ -6,18 +6,23 @@ import { DataList } from "~/components/data-list";
 import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
 import { forwardSignIn, forwardSignOut, getAuthSession } from "~/lib/auth.server";
-
 import {
   demoAuthUiConfig,
   sanitizeCallbackPath,
   validateSignInPayload,
   validateSignUpPayload,
 } from "~/lib/auth-config";
+import {
+  AUTH_PASSWORD_MIN_LENGTH,
+  AUTH_PASSWORD_POLICY_MESSAGE,
+  normalizeUsernameForAudit,
+} from "~/lib/auth-policy";
 import { ensureDemoSeeded, recordAuditEvent } from "~/lib/demo-state.server";
 import { demoServerEnv } from "~/lib/env.server";
 import { authActionSchema } from "~/lib/models";
 import { hashPassword } from "~/lib/password.server";
 import { errorPayload } from "~/lib/server-responses";
+import { formatLockoutMessage, getSignInLockoutState } from "~/lib/sign-in-attempts.server";
 import type { Route } from "./+types/auth";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -40,13 +45,44 @@ export async function action({ request }: Route.ActionArgs) {
   const parsed = authActionSchema.safeParse(input);
 
   if (!parsed.success) {
+    const username = normalizeUsernameForAudit(formData.get("username"));
+    const intent = formData.get("intent");
+    if (intent === "signIn" || intent === "signUp") {
+      await recordAuditEvent({
+        actorId: null,
+        action: intent === "signIn" ? "SignInFailure" : "SignUpFailure",
+        target: `auth:user:${username}`,
+        details: `${intent === "signIn" ? "Sign-in" : "Sign-up"} failed for ${username}; payload validation failed.`,
+      });
+    }
+
     return errorPayload("BAD_REQUEST", parsed.error.issues[0]?.message ?? "Invalid auth payload.");
   }
 
   if (parsed.data.intent === "signIn") {
     const validated = validateSignInPayload(parsed.data);
     if (!validated.success) {
+      const username = normalizeUsernameForAudit(formData.get("username"));
+      await recordAuditEvent({
+        actorId: null,
+        action: "SignInFailure",
+        target: `auth:user:${username}`,
+        details: `Sign-in failed for ${username}; payload validation failed.`,
+      });
+
       return errorPayload("BAD_REQUEST", validated.error.issues[0]?.message ?? "Sign-in failed.");
+    }
+
+    const lockout = await getSignInLockoutState(validated.data.username);
+    if (lockout.isLocked && lockout.lockedUntil) {
+      await recordAuditEvent({
+        actorId: null,
+        action: "SignInFailure",
+        target: `auth:user:${validated.data.username}`,
+        details: `Sign-in blocked for ${validated.data.username}; temporary lockout active until ${lockout.lockedUntil.toISOString()}.`,
+      });
+
+      return errorPayload("BAD_REQUEST", formatLockoutMessage(lockout.lockedUntil));
     }
 
     return forwardSignIn(
@@ -58,17 +94,28 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (parsed.data.intent === "signUp") {
+    const username = normalizeUsernameForAudit(formData.get("username"));
     const validated = validateSignUpPayload(parsed.data);
     if (!validated.success) {
-      return errorPayload("BAD_REQUEST", validated.error.issues[0]?.message ?? "Sign-up failed.");
-    }
+      await recordAuditEvent({
+        actorId: null,
+        action: "SignUpFailure",
+        target: `auth:user:${username}`,
+        details: `Sign-up failed for ${username}; payload validation failed.`,
+      });
 
-    if (validated.data.password !== validated.data.confirmPassword) {
-      return errorPayload("BAD_REQUEST", "Password confirmation does not match.");
+      return errorPayload("BAD_REQUEST", validated.error.issues[0]?.message ?? "Sign-up failed.");
     }
 
     const existing = await getDemoUserByUsername(validated.data.username);
     if (existing) {
+      await recordAuditEvent({
+        actorId: existing.id,
+        action: "SignUpFailure",
+        target: `auth:user:${validated.data.username}`,
+        details: `Sign-up failed for ${validated.data.username}; username already exists.`,
+      });
+
       return errorPayload("BAD_REQUEST", "That username is already in use.");
     }
 
@@ -81,14 +128,21 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     if (!created) {
+      await recordAuditEvent({
+        actorId: null,
+        action: "SignUpFailure",
+        target: `auth:user:${validated.data.username}`,
+        details: `Sign-up failed for ${validated.data.username}; user creation returned no record.`,
+      });
+
       return errorPayload("INTERNAL_ERROR", "Unable to create account.");
     }
 
     await recordAuditEvent({
       actorId: created.id,
-      action: "Created",
-      target: `user ${created.username}`,
-      details: `${created.username} created an account via public sign-up`,
+      action: "SignUpSuccess",
+      target: `auth:user:${created.username}`,
+      details: `${created.username} created an account via public sign-up.`,
     });
 
     return {
@@ -219,6 +273,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
           <p className="mt-2 text-sm text-[var(--muted)]">
             Public sign-up creates a viewer account with username/password credentials.
           </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{AUTH_PASSWORD_POLICY_MESSAGE}</p>
           <Form className="mt-3 grid gap-3" method="post">
             <input name="intent" type="hidden" value="signUp" />
             <InputField
@@ -240,7 +295,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
             <InputField
               autoComplete="new-password"
               label="Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="password"
               onChange={(event) => setSignUpPassword((event.target as HTMLInputElement).value)}
               required
@@ -250,7 +305,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
             <InputField
               autoComplete="new-password"
               label="Confirm Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="confirmPassword"
               onChange={(event) =>
                 setSignUpConfirmPassword((event.target as HTMLInputElement).value)

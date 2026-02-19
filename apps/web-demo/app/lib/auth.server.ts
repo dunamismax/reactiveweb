@@ -1,11 +1,10 @@
 import { Auth, type AuthConfig } from "@auth/core";
 import Credentials from "@auth/core/providers/credentials";
 import type { Session } from "@auth/core/types";
-import { getDemoUserByUsername, markDemoUserSeen } from "@reactiveweb/db";
 
-import { demoAuthUiConfig, sanitizeCallbackPath, validateSignInPayload } from "./auth-config";
+import { demoAuthUiConfig, sanitizeCallbackPath } from "./auth-config";
 import { demoServerEnv } from "./env.server";
-import { verifyPassword } from "./password.server";
+import { authorizeCredentialsSignIn } from "./sign-in-attempts.server";
 
 type AuthenticatedSession = Session & {
   user?: Session["user"] & {
@@ -105,19 +104,7 @@ export const authConfig: AuthConfig = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = validateSignInPayload(credentials);
-        if (!parsed.success) return null;
-
-        const user = await getDemoUserByUsername(parsed.data.username);
-        if (!user || !user.active || !user.passwordHash) return null;
-        if (!verifyPassword(parsed.data.password, user.passwordHash)) return null;
-
-        await markDemoUserSeen(user.id);
-        return {
-          id: user.id,
-          name: user.name,
-          role: user.role,
-        };
+        return authorizeCredentialsSignIn(credentials);
       },
     }),
   ],

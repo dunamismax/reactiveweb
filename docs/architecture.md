@@ -38,13 +38,14 @@
 - User mutations enforce explicit role-based authorization rules server-side.
 - User and activity data flow through shared Drizzle accessors in `@reactiveweb/db` (`packages/db/src/demo.ts`).
 - Auth credential checks use per-user password hashes (`demo_users.password_hash`).
+- Failed sign-in tracking + temporary lockouts are persisted in `demo_auth_attempts`.
 - `AUTH_DEMO_PASSWORD` remains a bootstrap/default-password input for local setup.
 
 ## web-demo Local Startup
 
 ```bash
 corepack enable
-pnpm install
+corepack pnpm install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -56,7 +57,9 @@ docker run -d \
 export DATABASE_URL="postgres://postgres:postgres@localhost:55432/reactiveweb"
 export AUTH_SECRET="replace-with-16+-char-secret"
 export AUTH_DEMO_PASSWORD="replace-with-demo-password"
-export VITE_DEMO_ADMIN_EMAIL="admin@reactiveweb.dev"
-pnpm run demo:bootstrap
-pnpm run dev
+export AUTH_MAX_FAILED_SIGNIN_ATTEMPTS="5"
+export AUTH_LOCKOUT_DURATION_MINUTES="15"
+export VITE_DEMO_OWNER_USERNAME="owner"
+corepack pnpm run demo:bootstrap
+corepack pnpm run dev
 ```

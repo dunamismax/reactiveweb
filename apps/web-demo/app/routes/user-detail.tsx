@@ -19,6 +19,7 @@ import { ConfirmDialog } from "~/components/confirm-dialog";
 import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
 import { useToast } from "~/components/toast";
+import { AUTH_PASSWORD_MIN_LENGTH, AUTH_PASSWORD_POLICY_MESSAGE } from "~/lib/auth-policy";
 import { assertCanMutateUser } from "~/lib/authorization.server";
 import {
   mapDbActivityToEvent,
@@ -145,10 +146,6 @@ export async function action({ request }: Route.ActionArgs) {
     return { ok: true, message: "Status updated." };
   }
 
-  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
-    return errorPayload("BAD_REQUEST", "Password confirmation does not match.");
-  }
-
   const updatedPassword = await updateDemoUserPassword({
     userId,
     passwordHash: hashPassword(parsed.data.newPassword),
@@ -161,9 +158,9 @@ export async function action({ request }: Route.ActionArgs) {
 
   await recordAuditEvent({
     actorId: session.user.id,
-    action: "Updated",
-    target: `${current.username} password`,
-    details: `${session.user.username} reset ${current.username}'s password and required rotation`,
+    action: "AdminPasswordReset",
+    target: `auth:user:${current.username}`,
+    details: `${session.user.username} reset ${current.username}'s password and enforced rotation.`,
   });
 
   return { ok: true, message: "Password reset. User must change it on next sign-in." };
@@ -275,6 +272,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
           <p className="mt-3 text-sm text-[var(--muted)]">
             Click a control to change this user's role/status, or reset their password.
           </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{AUTH_PASSWORD_POLICY_MESSAGE}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface)] hover:text-[var(--foreground)] disabled:opacity-40"
@@ -304,7 +302,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
             <InputField
               autoComplete="new-password"
               label="Reset Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="newPassword"
               onChange={(event) => setNewPassword((event.target as HTMLInputElement).value)}
               required
@@ -314,7 +312,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
             <InputField
               autoComplete="new-password"
               label="Confirm Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="confirmPassword"
               onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
               required

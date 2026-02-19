@@ -51,7 +51,31 @@ corepack pnpm run dev
 
 `AUTH_DEMO_PASSWORD` is a local bootstrap credential source. `VITE_DEMO_OWNER_USERNAME` controls the seeded owner username.
 `web-demo` stores and verifies per-user password hashes in Postgres.
+`AUTH_MAX_FAILED_SIGNIN_ATTEMPTS` and `AUTH_LOCKOUT_DURATION_MINUTES` control temporary sign-in lockouts.
 `55432` avoids collisions with existing local Postgres services bound to `5432`.
+
+## Username-First Auth Bootstrap
+
+1. Run bootstrap and dev server:
+```bash
+corepack pnpm run demo:bootstrap
+corepack pnpm run dev
+```
+2. Open `/auth`.
+3. Sign in with username `owner` (or `VITE_DEMO_OWNER_USERNAME`) and password `AUTH_DEMO_PASSWORD`.
+4. Public sign-up creates viewer users with username/password credentials.
+
+## Admin Reset + Forced Password Change
+
+- Owner/admin users can reset another user's password from `Users` > user detail.
+- Reset sets `mustChangePassword=true` and the next sign-in is redirected to `/settings?required=password-change`.
+- Protected routes remain blocked until the user rotates the password in Settings.
+
+## Auth Lockout Behavior
+
+- Failed sign-ins are persisted in Postgres (`demo_auth_attempts`).
+- After `AUTH_MAX_FAILED_SIGNIN_ATTEMPTS` failed attempts for a username, sign-in is locked for `AUTH_LOCKOUT_DURATION_MINUTES`.
+- A successful sign-in clears the failed-attempt state.
 
 ## Workspace Commands
 

@@ -43,6 +43,13 @@
       "when": 1740010000003,
       "tag": "0005_username_only_auth_cutover",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1740100000000,
+      "tag": "0006_auth_lockout_hardening",
+      "breakpoints": true
     }
   ]
 }

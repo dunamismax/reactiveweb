@@ -6,6 +6,7 @@ import { DataList } from "~/components/data-list";
 import { InputField } from "~/components/input";
 import { SectionHeader } from "~/components/section-header";
 import { useToast } from "~/components/toast";
+import { AUTH_PASSWORD_MIN_LENGTH, AUTH_PASSWORD_POLICY_MESSAGE } from "~/lib/auth-policy";
 import { recordAuditEvent, requireAuthSession } from "~/lib/demo-state.server";
 import { settingsActionSchema } from "~/lib/models";
 import { hashPassword, verifyPassword } from "~/lib/password.server";
@@ -85,10 +86,6 @@ export async function action({ request }: Route.ActionArgs) {
       intent: "updateProfile" as const,
       message: "Profile updated.",
     };
-  }
-
-  if (parsed.data.newPassword !== parsed.data.confirmPassword) {
-    return errorPayload("BAD_REQUEST", "New password confirmation does not match.");
   }
 
   if (!dbUser.passwordHash || !verifyPassword(parsed.data.currentPassword, dbUser.passwordHash)) {
@@ -220,7 +217,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Password</p>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            Change your account password. Minimum length is 8 characters.
+            Change your account password. {AUTH_PASSWORD_POLICY_MESSAGE}
           </p>
 
           <Form className="mt-4 grid gap-3" method="post">
@@ -237,7 +234,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
             <InputField
               autoComplete="new-password"
               label="New Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="newPassword"
               onChange={(event) => setNewPassword((event.target as HTMLInputElement).value)}
               required
@@ -247,7 +244,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
             <InputField
               autoComplete="new-password"
               label="Confirm Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="confirmPassword"
               onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
               required

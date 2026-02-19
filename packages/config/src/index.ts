@@ -19,6 +19,15 @@ const envBooleanSchema = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+const envPositiveIntSchema = z.preprocess((value) => {
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? value : parsed;
+  }
+
+  return value;
+}, z.number().int().min(1));
+
 const usernameRegex = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
 
 const demoUsernameSchema = z
@@ -54,6 +63,8 @@ export const demoServerEnvSchema = baseEnvSchema.extend({
   DATABASE_URL: z.string().url(),
   AUTH_SECRET: z.string().min(16),
   AUTH_DEMO_PASSWORD: z.string().min(8),
+  AUTH_MAX_FAILED_SIGNIN_ATTEMPTS: envPositiveIntSchema.default(5),
+  AUTH_LOCKOUT_DURATION_MINUTES: envPositiveIntSchema.default(15),
   VITE_DEMO_OWNER_USERNAME: demoUsernameSchema.default("owner"),
 });
 

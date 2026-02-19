@@ -17,6 +17,7 @@ import { SectionHeader } from "~/components/section-header";
 import { SelectField } from "~/components/select";
 import { Skeleton } from "~/components/skeleton";
 import { useToast } from "~/components/toast";
+import { AUTH_PASSWORD_MIN_LENGTH, AUTH_PASSWORD_POLICY_MESSAGE } from "~/lib/auth-policy";
 import { assertCanCreateUser, assertCanMutateUser } from "~/lib/authorization.server";
 import {
   mapDbUserToDemoUser,
@@ -139,10 +140,6 @@ export async function action({ request }: Route.ActionArgs) {
         "BAD_REQUEST",
         parsedCreate.error.issues[0]?.message ?? "Invalid user payload.",
       );
-    }
-
-    if (parsedCreate.data.password !== parsedCreate.data.confirmPassword) {
-      return errorPayload("BAD_REQUEST", "Password confirmation does not match.");
     }
 
     assertCanCreateUser(session.user, parsedCreate.data.role);
@@ -331,6 +328,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
           <p className="mt-2 text-sm text-[var(--muted)]">
             Owner/admin accounts can provision users directly with a temporary password.
           </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">{AUTH_PASSWORD_POLICY_MESSAGE}</p>
           <Form className="mt-3 grid gap-3" method="post">
             <input name="intent" type="hidden" value="createUser" />
             <InputField
@@ -357,7 +355,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             <InputField
               autoComplete="new-password"
               label="Temporary Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="password"
               onChange={(event) => setPassword((event.target as HTMLInputElement).value)}
               required
@@ -367,7 +365,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             <InputField
               autoComplete="new-password"
               label="Confirm Password"
-              minLength={8}
+              minLength={AUTH_PASSWORD_MIN_LENGTH}
               name="confirmPassword"
               onChange={(event) => setConfirmPassword((event.target as HTMLInputElement).value)}
               required

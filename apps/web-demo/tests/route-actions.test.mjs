@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { VALID_ACTOR_ID, db, demoState, authServer } = vi.hoisted(() => {
+const { VALID_ACTOR_ID, db, demoState, authServer, signInAttempts } = vi.hoisted(() => {
   const VALID_ACTOR_ID = "79f0e8e6-4603-4711-bdb8-22af87ce756d";
 
   return {
@@ -11,6 +11,10 @@ const { VALID_ACTOR_ID, db, demoState, authServer } = vi.hoisted(() => {
       getDemoUserByUsername: vi.fn(),
       listDemoUsers: vi.fn(),
       markDemoUserSeen: vi.fn(),
+      clearDemoAuthFailures: vi.fn(),
+      getDemoAuthAttempt: vi.fn(),
+      insertDemoAuditLog: vi.fn(),
+      recordDemoAuthFailure: vi.fn(),
       updateDemoUserPassword: vi.fn(),
       updateDemoUserRole: vi.fn(),
       updateDemoUserStatus: vi.fn(),
@@ -36,6 +40,10 @@ const { VALID_ACTOR_ID, db, demoState, authServer } = vi.hoisted(() => {
       getAuthSession: vi.fn(),
       authHandler: vi.fn(),
     },
+    signInAttempts: {
+      formatLockoutMessage: vi.fn(() => "Too many failed sign-in attempts. Try again later."),
+      getSignInLockoutState: vi.fn(async () => ({ isLocked: false, lockedUntil: null })),
+    },
   };
 });
 
@@ -44,6 +52,8 @@ const mockDemoServerEnv = {
   DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
   AUTH_SECRET: "replace-with-16+-char-secret",
   AUTH_DEMO_PASSWORD: "demo-pass-123",
+  AUTH_MAX_FAILED_SIGNIN_ATTEMPTS: 5,
+  AUTH_LOCKOUT_DURATION_MINUTES: 15,
   VITE_DEMO_OWNER_USERNAME: "owner",
 };
 
@@ -54,6 +64,9 @@ vi.mock("../app/lib/demo-state.server.ts", () => demoState);
 vi.mock("~/lib/auth.server", () => authServer);
 vi.mock("../app/lib/auth.server", () => authServer);
 vi.mock("../app/lib/auth.server.ts", () => authServer);
+vi.mock("~/lib/sign-in-attempts.server", () => signInAttempts);
+vi.mock("../app/lib/sign-in-attempts.server", () => signInAttempts);
+vi.mock("../app/lib/sign-in-attempts.server.ts", () => signInAttempts);
 vi.mock("~/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
 vi.mock("../app/lib/env.server", () => ({ demoServerEnv: mockDemoServerEnv }));
 vi.mock("../app/lib/env.server.ts", () => ({ demoServerEnv: mockDemoServerEnv }));
@@ -248,6 +261,12 @@ describe("user detail action", () => {
       passwordHash: expect.any(String),
       mustChangePassword: true,
     });
+    expect(demoState.recordAuditEvent).toHaveBeenCalledWith({
+      actorId: VALID_ACTOR_ID,
+      action: "AdminPasswordReset",
+      target: "auth:user:target-user",
+      details: "owner reset target-user's password and enforced rotation.",
+    });
   });
 
   it("rejects self password reset from user-detail action", async () => {
@@ -278,9 +297,15 @@ describe("auth action", () => {
     db.getDemoUserByUsername.mockReset();
     db.createDemoUser.mockReset();
     demoState.recordAuditEvent.mockReset();
+    signInAttempts.getSignInLockoutState.mockReset();
+    signInAttempts.formatLockoutMessage.mockReset();
 
     authServer.forwardSignIn.mockResolvedValue(new Response(null, { status: 302 }));
     authServer.forwardSignOut.mockResolvedValue(new Response(null, { status: 302 }));
+    signInAttempts.getSignInLockoutState.mockResolvedValue({ isLocked: false, lockedUntil: null });
+    signInAttempts.formatLockoutMessage.mockReturnValue(
+      "Too many failed sign-in attempts. Try again later.",
+    );
   });
 
   it("returns typed bad request for invalid sign-in payload", async () => {
@@ -290,6 +315,12 @@ describe("auth action", () => {
 
     expect(response.ok).toBe(false);
     expect(response.error.code).toBe("BAD_REQUEST");
+    expect(demoState.recordAuditEvent).toHaveBeenCalledWith({
+      actorId: null,
+      action: "SignInFailure",
+      target: "auth:user:x",
+      details: "Sign-in failed for x; payload validation failed.",
+    });
   });
 
   it("forwards sign-in with sanitized callback", async () => {
@@ -307,6 +338,35 @@ describe("auth action", () => {
     expect(call[1]).toBe("owner");
     expect(call[2]).toBe("demo-pass-123");
     expect(call[3]).toBe("/auth?status=signed-in");
+    expect(signInAttempts.getSignInLockoutState).toHaveBeenCalledWith("owner");
+  });
+
+  it("blocks sign-in while lockout is active", async () => {
+    signInAttempts.getSignInLockoutState.mockResolvedValue({
+      isLocked: true,
+      lockedUntil: new Date("2030-01-01T00:00:00.000Z"),
+    });
+    signInAttempts.formatLockoutMessage.mockReturnValue("locked");
+
+    const response = await authRoute.action({
+      request: buildPostRequest("/auth", {
+        intent: "signIn",
+        username: "owner",
+        password: "demo-pass-123",
+      }),
+    });
+
+    expect(response.ok).toBe(false);
+    expect(response.error.code).toBe("BAD_REQUEST");
+    expect(response.error.message).toBe("locked");
+    expect(authServer.forwardSignIn).not.toHaveBeenCalled();
+    expect(demoState.recordAuditEvent).toHaveBeenCalledWith({
+      actorId: null,
+      action: "SignInFailure",
+      target: "auth:user:owner",
+      details:
+        "Sign-in blocked for owner; temporary lockout active until 2030-01-01T00:00:00.000Z.",
+    });
   });
 
   it("creates a self-signup account", async () => {
@@ -332,7 +392,12 @@ describe("auth action", () => {
     expect(response.ok).toBe(true);
     expect(response.intent).toBe("signUp");
     expect(db.createDemoUser).toHaveBeenCalledTimes(1);
-    expect(demoState.recordAuditEvent).toHaveBeenCalledTimes(1);
+    expect(demoState.recordAuditEvent).toHaveBeenCalledWith({
+      actorId: "u-3",
+      action: "SignUpSuccess",
+      target: "auth:user:new-user",
+      details: "new-user created an account via public sign-up.",
+    });
   });
 
   it("rejects self-signup when username already exists", async () => {
@@ -356,6 +421,12 @@ describe("auth action", () => {
     expect(response.ok).toBe(false);
     expect(response.error.code).toBe("BAD_REQUEST");
     expect(db.createDemoUser).not.toHaveBeenCalled();
+    expect(demoState.recordAuditEvent).toHaveBeenCalledWith({
+      actorId: "u-existing",
+      action: "SignUpFailure",
+      target: "auth:user:existing-user",
+      details: "Sign-up failed for existing-user; username already exists.",
+    });
   });
 
   it("forwards sign-out", async () => {

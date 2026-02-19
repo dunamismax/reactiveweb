@@ -32,6 +32,22 @@ describe("demo env parsing", () => {
     });
 
     expect(parsed.VITE_DEMO_OWNER_USERNAME).toBe("owner");
+    expect(parsed.AUTH_MAX_FAILED_SIGNIN_ATTEMPTS).toBe(5);
+    expect(parsed.AUTH_LOCKOUT_DURATION_MINUTES).toBe(15);
+  });
+
+  it("parses lockout knobs from numeric strings", () => {
+    const parsed = parseDemoServerEnv({
+      DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
+      AUTH_SECRET: "replace-with-16+-char-secret",
+      AUTH_DEMO_PASSWORD: "demo-pass-123",
+      AUTH_MAX_FAILED_SIGNIN_ATTEMPTS: "7",
+      AUTH_LOCKOUT_DURATION_MINUTES: "30",
+      VITE_DEMO_OWNER_USERNAME: "owner",
+    });
+
+    expect(parsed.AUTH_MAX_FAILED_SIGNIN_ATTEMPTS).toBe(7);
+    expect(parsed.AUTH_LOCKOUT_DURATION_MINUTES).toBe(30);
   });
 
   it("rejects invalid owner usernames", () => {

@@ -27,6 +27,8 @@ corepack pnpm run typecheck
 DATABASE_URL=postgres://postgres:postgres@localhost:55432/reactiveweb
 AUTH_SECRET=replace-with-16+-char-secret
 AUTH_DEMO_PASSWORD=replace-with-demo-password
+AUTH_MAX_FAILED_SIGNIN_ATTEMPTS=5
+AUTH_LOCKOUT_DURATION_MINUTES=15
 VITE_DEMO_OWNER_USERNAME=owner
 ```
 
@@ -49,6 +51,7 @@ docker run -d \
 - Authentication is username/password only.
 - Public self-signup creates viewer users.
 - Owner/admin user creation and password reset flows are direct (no invite links).
+- Failed sign-in tracking and lockouts are persisted in `demo_auth_attempts`.
 
 ## Deterministic Local Bootstrap
 
@@ -61,6 +64,29 @@ What it does:
 1. Runs Drizzle migrations (`packages/db/drizzle.config.ts`).
 2. Seeds default workspace users if missing.
 3. Backfills missing `password_hash` values idempotently.
+
+## Local Username-First Sign-In Flow
+
+1. Start the app:
+```bash
+corepack pnpm run demo:bootstrap
+corepack pnpm run dev
+```
+2. Open `http://localhost:5173/auth`.
+3. Sign in as `owner` (or `VITE_DEMO_OWNER_USERNAME`) using `AUTH_DEMO_PASSWORD`.
+4. Use public sign-up on `/auth` to create new viewer accounts.
+
+## Admin Reset + Forced Rotation
+
+- Password reset from user detail writes a new hash and sets `must_change_password=true`.
+- On next sign-in, the user is forced to `/settings?required=password-change`.
+- Settings password change clears `must_change_password` and restores full route access.
+
+## Lockout and Rate-Limit Knobs
+
+- `AUTH_MAX_FAILED_SIGNIN_ATTEMPTS`: failed attempts allowed before lockout (default `5`).
+- `AUTH_LOCKOUT_DURATION_MINUTES`: lockout duration in minutes (default `15`).
+- Lockout state is username-keyed, persisted server-side, and cleared on successful sign-in.
 
 ## Troubleshooting
 

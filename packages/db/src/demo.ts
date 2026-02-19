@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, count, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "./index.ts";
-import { demoAuditLogs, demoUsers } from "./schema/index.ts";
+import { demoAuditLogs, demoAuthAttempts, demoUsers } from "./schema/index.ts";
 
 const defaultWorkspaceUsers = [
   { name: "Stephen Sawyer", username: "owner", role: "owner", active: true },
@@ -12,16 +12,17 @@ const defaultWorkspaceUsers = [
 ] as const;
 
 function normalizeUsername(value: string) {
-  const normalized = value.trim().toLowerCase();
-  return normalized.length > 0 ? normalized : "owner";
+  return value.trim().toLowerCase();
 }
 
 function ensureUniqueUsername(base: string, used: Set<string>) {
-  let candidate = normalizeUsername(base);
+  const normalizedBase = normalizeUsername(base);
+  const safeBase = normalizedBase.length > 0 ? normalizedBase : "owner";
+  let candidate = safeBase;
   let index = 1;
 
   while (used.has(candidate)) {
-    candidate = `${normalizeUsername(base)}-${index}`;
+    candidate = `${safeBase}-${index}`;
     index += 1;
   }
 
@@ -125,6 +126,85 @@ export async function getDemoUserByUsername(username: string) {
     .limit(1);
 
   return user ?? null;
+}
+
+export async function getDemoAuthAttempt(username: string) {
+  const normalizedUsername = normalizeUsername(username);
+  if (normalizedUsername.length === 0) {
+    return null;
+  }
+
+  const [attempt] = await db
+    .select({
+      username: demoAuthAttempts.username,
+      failedAttempts: demoAuthAttempts.failedAttempts,
+      lastFailedAt: demoAuthAttempts.lastFailedAt,
+      lockedUntil: demoAuthAttempts.lockedUntil,
+      updatedAt: demoAuthAttempts.updatedAt,
+    })
+    .from(demoAuthAttempts)
+    .where(eq(demoAuthAttempts.username, normalizedUsername))
+    .limit(1);
+
+  return attempt ?? null;
+}
+
+export async function recordDemoAuthFailure(input: {
+  username: string;
+  now: Date;
+  maxFailedAttempts: number;
+  lockoutMinutes: number;
+}) {
+  const normalizedUsername = normalizeUsername(input.username);
+  if (normalizedUsername.length === 0) {
+    return null;
+  }
+
+  const lockoutUntil = new Date(input.now.getTime() + input.lockoutMinutes * 60_000);
+  const [updated] = await db
+    .insert(demoAuthAttempts)
+    .values({
+      username: normalizedUsername,
+      failedAttempts: 1,
+      lastFailedAt: input.now,
+      lockedUntil: input.maxFailedAttempts <= 1 ? lockoutUntil : null,
+      updatedAt: input.now,
+    })
+    .onConflictDoUpdate({
+      target: demoAuthAttempts.username,
+      set: {
+        failedAttempts: sql`${demoAuthAttempts.failedAttempts} + 1`,
+        lastFailedAt: input.now,
+        lockedUntil: sql`CASE
+          WHEN ${demoAuthAttempts.failedAttempts} + 1 >= ${input.maxFailedAttempts}
+          THEN ${lockoutUntil}
+          ELSE NULL
+        END`,
+        updatedAt: input.now,
+      },
+    })
+    .returning({
+      username: demoAuthAttempts.username,
+      failedAttempts: demoAuthAttempts.failedAttempts,
+      lastFailedAt: demoAuthAttempts.lastFailedAt,
+      lockedUntil: demoAuthAttempts.lockedUntil,
+    });
+
+  return updated ?? null;
+}
+
+export async function clearDemoAuthFailures(username: string) {
+  const normalizedUsername = normalizeUsername(username);
+  if (normalizedUsername.length === 0) {
+    return null;
+  }
+
+  const [deleted] = await db
+    .delete(demoAuthAttempts)
+    .where(eq(demoAuthAttempts.username, normalizedUsername))
+    .returning({ username: demoAuthAttempts.username });
+
+  return deleted ?? null;
 }
 
 export async function createDemoUser(input: {
