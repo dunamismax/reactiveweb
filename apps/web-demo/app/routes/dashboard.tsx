@@ -189,7 +189,12 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 lg:col-span-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--muted)]">Recent Activity</p>
-            <Link className="text-xs text-[var(--accent)] hover:underline" to="/activity">
+            <Link
+              className="text-xs text-[var(--accent)] hover:underline"
+              prefetch="intent"
+              to="/activity"
+              viewTransition
+            >
               View all
             </Link>
           </div>
@@ -239,21 +244,27 @@ export default function DashboardRoute({ loaderData }: Route.ComponentProps) {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <Link
           className="card-hover rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm"
+          prefetch="intent"
           to="/users"
+          viewTransition
         >
           <p className="font-medium">User Management</p>
           <p className="mt-1 text-[var(--muted)]">Create and manage workspace members</p>
         </Link>
         <Link
           className="card-hover rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm"
+          prefetch="intent"
           to="/activity"
+          viewTransition
         >
           <p className="font-medium">Activity Log</p>
           <p className="mt-1 text-[var(--muted)]">Browse the full audit trail</p>
         </Link>
         <Link
           className="card-hover rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm"
+          prefetch="intent"
           to="/stack"
+          viewTransition
         >
           <p className="font-medium">Stack Matrix</p>
           <p className="mt-1 text-[var(--muted)]">View technology stack contract</p>

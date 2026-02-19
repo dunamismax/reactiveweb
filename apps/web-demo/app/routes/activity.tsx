@@ -103,7 +103,9 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
                 : "border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
             }`}
             key={f}
+            prefetch="intent"
             to={buildFilterUrl(f)}
+            viewTransition
           >
             {f}
           </Link>
@@ -120,7 +122,7 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="mt-3">
-        <Form className="flex items-center gap-2" method="get">
+        <Form className="flex items-center gap-2" method="get" viewTransition>
           {currentAction !== "All" && <input name="action" type="hidden" value={currentAction} />}
           <input
             className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
@@ -138,7 +140,9 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
           {currentQ && (
             <Link
               className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+              prefetch="intent"
               to={buildFilterUrl(currentAction)}
+              viewTransition
             >
               Clear
             </Link>
@@ -202,7 +206,9 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
           {page > 1 ? (
             <Link
               className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+              prefetch="intent"
               to={buildPageUrl(page - 1)}
+              viewTransition
             >
               ← Prev
             </Link>
@@ -219,7 +225,9 @@ export default function ActivityRoute({ loaderData }: Route.ComponentProps) {
           {page < totalPages ? (
             <Link
               className="nav-transition rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+              prefetch="intent"
               to={buildPageUrl(page + 1)}
+              viewTransition
             >
               Next →
             </Link>

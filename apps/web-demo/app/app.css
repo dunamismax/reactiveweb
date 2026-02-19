@@ -62,6 +62,11 @@
   --role-viewer-bg: #3d375e7f;
   --role-viewer-border: color-mix(in srgb, var(--accent8) 68%, var(--accent7) 32%);
   --role-viewer-fg: var(--muted);
+
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 * {
@@ -73,9 +78,15 @@ body {
   min-height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   color: var(--foreground);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   background:
     radial-gradient(circle at 18% 8%, #3d375e 0%, transparent 44%),
     radial-gradient(circle at 85% 10%, #8464c640 0%, transparent 36%),
@@ -98,43 +109,88 @@ button {
 
 /* Progress bar fill animation */
 .progress-fill {
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width var(--motion-slow) var(--motion-ease-standard);
 }
 
 /* Table row hover */
 tr.row-interactive {
-  transition: background-color 0.15s ease;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
 }
 tr.row-interactive:hover {
   background-color: var(--overlay-soft);
+  transform: translate3d(0, -1px, 0);
 }
 
 /* Card hover lift */
 .card-hover {
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color var(--motion-base) var(--motion-ease-standard),
+    box-shadow var(--motion-base) var(--motion-ease-standard),
+    transform var(--motion-base) var(--motion-ease-standard);
+  will-change: transform;
 }
 .card-hover:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 80%, transparent);
+  transform: translate3d(0, -2px, 0);
 }
 
 /* Smooth nav transitions */
 .nav-transition {
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-transition:hover {
+    transform: translate3d(0, -1px, 0);
+  }
+}
+
+.app-main {
+  position: relative;
+  transform: translate3d(0, 0, 0);
+  will-change: opacity, transform;
+}
+
+.route-viewport {
+  view-transition-name: route-viewport;
 }
 
 /* Route transition */
 .route-transitioning {
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
+  opacity: 0.92;
+  transform: translate3d(0, 3px, 0);
+  transition:
+    opacity var(--motion-base) var(--motion-ease-standard),
+    transform var(--motion-base) var(--motion-ease-standard);
 }
 .route-idle {
   opacity: 1;
-  transition: opacity 0.15s ease;
+  transform: translate3d(0, 0, 0);
+  transition:
+    opacity var(--motion-base) var(--motion-ease-standard),
+    transform var(--motion-base) var(--motion-ease-standard);
+}
+
+@supports (view-transition-name: route-viewport) {
+  ::view-transition-group(route-viewport) {
+    animation-duration: var(--motion-base);
+    animation-timing-function: var(--motion-ease-standard);
+  }
+
+  ::view-transition-old(route-viewport) {
+    animation: route-fade-out var(--motion-base) var(--motion-ease-standard) both;
+  }
+
+  ::view-transition-new(route-viewport) {
+    animation: route-fade-in var(--motion-base) var(--motion-ease-standard) both;
+  }
 }
 
 /* Toast animations */
@@ -170,13 +226,67 @@ tr.row-interactive:hover {
 }
 
 .toast-enter {
-  animation: toast-slide-in 200ms ease forwards;
+  animation: toast-slide-in var(--motion-base) var(--motion-ease-standard) forwards;
 }
 
 .toast-exit {
-  animation: toast-slide-out 200ms ease forwards;
+  animation: toast-slide-out var(--motion-base) var(--motion-ease-standard) forwards;
 }
 
 .toast-progress-bar {
   animation: toast-progress linear forwards;
+}
+
+@keyframes route-fade-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+}
+
+@keyframes route-fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .toast-enter,
+  .toast-exit,
+  .toast-progress-bar,
+  .progress-fill,
+  .nav-transition,
+  .card-hover,
+  tr.row-interactive,
+  .route-transitioning,
+  .route-idle {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+
+  .nav-transition:hover,
+  .card-hover:hover,
+  tr.row-interactive:hover {
+    transform: none;
+  }
+
+  .route-transitioning,
+  .route-idle {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 type Command = {
@@ -34,6 +34,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           cmd.group.toLowerCase().includes(query.toLowerCase()),
       )
     : commands;
+
+  const runCommand = useCallback(
+    (to: string) => {
+      navigate(to, { viewTransition: true });
+      onClose();
+    },
+    [navigate, onClose],
+  );
 
   useEffect(() => {
     if (open) {
@@ -80,15 +88,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         event.preventDefault();
         const cmd = filtered[activeIndex];
         if (cmd) {
-          navigate(cmd.to);
-          onClose();
+          runCommand(cmd.to);
         }
       }
     }
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, filtered, activeIndex, navigate]);
+  }, [open, onClose, filtered, activeIndex, runCommand]);
 
   if (!open) return null;
 
@@ -136,8 +143,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                     : "text-[var(--foreground)] hover:bg-[var(--surface)]"
                 }`}
                 onClick={() => {
-                  navigate(cmd.to);
-                  onClose();
+                  runCommand(cmd.to);
                 }}
                 onMouseEnter={() => setActiveIndex(i)}
                 role="option"

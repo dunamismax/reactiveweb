@@ -230,7 +230,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
       <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr]">
         <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="text-sm font-medium">Credentials Demo</p>
-          <Form className="mt-3 grid gap-3" method="post">
+          <Form className="mt-3 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="signIn" />
             <input name="callbackUrl" type="hidden" value={demoAuthUiConfig.signInCallbackPath} />
             <InputField
@@ -252,7 +252,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
               Sign In
             </Button>
           </Form>
-          <Form className="mt-2" method="post">
+          <Form className="mt-2" method="post" viewTransition>
             <input name="intent" type="hidden" value="signOut" />
             <input name="callbackUrl" type="hidden" value={demoAuthUiConfig.signOutCallbackPath} />
             <Button disabled={isSubmitting} type="submit" variant="outline">
@@ -274,7 +274,7 @@ export default function AuthRoute({ loaderData, actionData }: Route.ComponentPro
             Public sign-up creates a viewer account with username/password credentials.
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">{AUTH_PASSWORD_POLICY_MESSAGE}</p>
-          <Form className="mt-3 grid gap-3" method="post">
+          <Form className="mt-3 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="signUp" />
             <InputField
               autoComplete="name"

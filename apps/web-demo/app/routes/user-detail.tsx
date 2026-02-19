@@ -211,7 +211,10 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
 
   function handleConfirm() {
     if (!pendingAction) return;
-    submit({ intent: pendingAction.intent, userId: pendingAction.userId }, { method: "post" });
+    submit(
+      { intent: pendingAction.intent, userId: pendingAction.userId },
+      { method: "post", viewTransition: true },
+    );
     setPendingAction(null);
   }
 
@@ -223,7 +226,9 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
       <div className="flex items-center gap-2 border-b border-[var(--border)] pb-4">
         <Link
           className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+          prefetch="intent"
           to="/users"
+          viewTransition
         >
           ← Users
         </Link>
@@ -296,7 +301,7 @@ export default function UserDetailRoute({ loaderData, actionData }: Route.Compon
             </button>
           </div>
 
-          <Form className="mt-4 grid gap-3" method="post">
+          <Form className="mt-4 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="resetPassword" />
             <input name="userId" type="hidden" value={user.id} />
             <InputField

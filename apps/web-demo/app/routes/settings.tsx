@@ -199,7 +199,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
             />
           </div>
 
-          <Form className="mt-4 grid gap-3" method="post">
+          <Form className="mt-4 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="updateProfile" />
             <InputField
               label="Display Name"
@@ -220,7 +220,7 @@ export default function SettingsRoute({ actionData, loaderData }: Route.Componen
             Change your account password. {AUTH_PASSWORD_POLICY_MESSAGE}
           </p>
 
-          <Form className="mt-4 grid gap-3" method="post">
+          <Form className="mt-4 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="changePassword" />
             <InputField
               autoComplete="current-password"

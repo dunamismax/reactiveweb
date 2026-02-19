@@ -283,7 +283,10 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
 
   function handleConfirm() {
     if (!pendingAction) return;
-    submit({ intent: pendingAction.intent, userId: pendingAction.userId }, { method: "post" });
+    submit(
+      { intent: pendingAction.intent, userId: pendingAction.userId },
+      { method: "post", viewTransition: true },
+    );
     setPendingAction(null);
   }
 
@@ -329,7 +332,7 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
             Owner/admin accounts can provision users directly with a temporary password.
           </p>
           <p className="mt-1 text-xs text-[var(--muted)]">{AUTH_PASSWORD_POLICY_MESSAGE}</p>
-          <Form className="mt-3 grid gap-3" method="post">
+          <Form className="mt-3 grid gap-3" method="post" viewTransition>
             <input name="intent" type="hidden" value="createUser" />
             <InputField
               label="Name"
@@ -471,12 +474,12 @@ export default function UsersRoute({ loaderData, actionData }: Route.ComponentPr
                           key={user.id}
                         >
                           <td className="px-4 py-3 align-middle">
-                            <Link to={`/users/${user.id}`}>
+                            <Link prefetch="intent" to={`/users/${user.id}`} viewTransition>
                               <Avatar name={user.name} size="md" />
                             </Link>
                           </td>
                           <td className="px-4 py-3 align-top">
-                            <Link to={`/users/${user.id}`}>
+                            <Link prefetch="intent" to={`/users/${user.id}`} viewTransition>
                               <p className="font-medium transition-colors hover:text-[var(--accent)]">
                                 {user.name}
                               </p>

@@ -91,7 +91,9 @@ export function AppShell({ currentUserName, userCount }: AppShellProps) {
               end={item.end}
               key={item.to}
               onClick={() => setMobileOpen(false)}
+              prefetch="intent"
               to={item.to}
+              viewTransition
             >
               {item.label}
             </NavLink>
@@ -105,7 +107,9 @@ export function AppShell({ currentUserName, userCount }: AppShellProps) {
               className={({ isActive }) => navClass(isActive)}
               key={item.to}
               onClick={() => setMobileOpen(false)}
+              prefetch="intent"
               to={item.to}
+              viewTransition
             >
               {item.label}
             </NavLink>
@@ -137,11 +141,14 @@ export function AppShell({ currentUserName, userCount }: AppShellProps) {
       </aside>
 
       <main
-        className={`rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 md:p-6 ${
+        aria-busy={isNavigating}
+        className={`app-main rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 md:p-6 ${
           isNavigating ? "route-transitioning" : "route-idle"
         }`}
       >
-        <Outlet />
+        <div className="route-viewport">
+          <Outlet />
+        </div>
       </main>
 
       <CommandPalette onClose={() => setPaletteOpen(false)} open={paletteOpen} />
