@@ -1,9 +1,6 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 
-const configuredBun =
-  process.env.BUN_BIN ?? (process.env.HOME ? `${process.env.HOME}/.bun/bin/bun` : "bun");
-const bunBin = existsSync(configuredBun) ? configuredBun : "bun";
+const bunBin = process.execPath;
 
 function runBunCommand(args: string[]) {
   return new Promise<void>((resolve, reject) => {

@@ -32,7 +32,7 @@ Monorepo for Stephen Sawyer's Nuxt/Vue projects, built on Bun workspaces with a 
 ## Quick Start
 
 ```bash
-/Users/sawyer/.bun/bin/bun install
+bun install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -43,19 +43,19 @@ docker run -d \
   postgres:16-alpine
 cp .env.example .env
 set -a; source .env; set +a
-/Users/sawyer/.bun/bin/bun run demo:bootstrap
-/Users/sawyer/.bun/bin/bun run dev
+bun run demo:bootstrap
+bun run dev
 ```
 
 ## Username-First Auth Bootstrap
 
 1. Bootstrap DB + seed data:
 ```bash
-/Users/sawyer/.bun/bin/bun run demo:bootstrap
+bun run demo:bootstrap
 ```
 2. Start the app:
 ```bash
-/Users/sawyer/.bun/bin/bun run dev
+bun run dev
 ```
 3. Open `/auth`.
 4. Sign in with username `owner` (or `DEMO_OWNER_USERNAME` / `NUXT_PUBLIC_DEMO_OWNER_USERNAME`) and password `AUTH_DEMO_PASSWORD`.
@@ -65,27 +65,27 @@ set -a; source .env; set +a
 
 ```bash
 # list apps
-/Users/sawyer/.bun/bin/bun run apps:list
+bun run apps:list
 
 # run flagship demo app
-/Users/sawyer/.bun/bin/bun run dev
+bun run dev
 
 # run starter template app
-/Users/sawyer/.bun/bin/bun run dev:template
+bun run dev:template
 
 # run a specific app
-/Users/sawyer/.bun/bin/bun run dev:app web-template
+bun run dev:app web-template
 
 # DB bootstrap helpers
-/Users/sawyer/.bun/bin/bun run db:migrate
-/Users/sawyer/.bun/bin/bun run demo:seed
-/Users/sawyer/.bun/bin/bun run demo:bootstrap
+bun run db:migrate
+bun run demo:seed
+bun run demo:bootstrap
 
 # quality checks
-/Users/sawyer/.bun/bin/bun run lint
-/Users/sawyer/.bun/bin/bun run typecheck
-/Users/sawyer/.bun/bin/bun run build
-/Users/sawyer/.bun/bin/bun run test:web-demo
+bun run lint
+bun run typecheck
+bun run build
+bun run test:web-demo
 ```
 
 ## Starter Apps

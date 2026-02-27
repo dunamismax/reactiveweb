@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,9 +6,7 @@ import { fileURLToPath } from "node:url";
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = dirname(scriptsDir);
 const appsDir = join(rootDir, "apps");
-const configuredBun =
-  process.env.BUN_BIN ?? (process.env.HOME ? `${process.env.HOME}/.bun/bin/bun` : "bun");
-const bunBin = existsSync(configuredBun) ? configuredBun : "bun";
+const bunBin = process.execPath;
 
 async function getApps() {
   const entries = await readdir(appsDir, { withFileTypes: true });

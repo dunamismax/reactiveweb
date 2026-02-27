@@ -12,18 +12,18 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev web-demo",
-    "dev:template": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev web-template",
-    "dev:app": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev",
-    "db:migrate": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/db-migrate.ts",
-    "demo:seed": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/web-demo-seed.ts",
-    "demo:bootstrap": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/web-demo-bootstrap.ts",
-    "build": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts build all",
-    "typecheck": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts typecheck all",
+    "dev": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts dev web-demo'",
+    "dev:template": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts dev web-template'",
+    "dev:app": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts dev'",
+    "db:migrate": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/db-migrate.ts'",
+    "demo:seed": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/web-demo-seed.ts'",
+    "demo:bootstrap": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/web-demo-bootstrap.ts'",
+    "build": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts build all'",
+    "typecheck": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts typecheck all'",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "apps:list": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts list",
-    "test:web-demo": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts test web-demo"
+    "apps:list": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts list'",
+    "test:web-demo": "${SHELL:-/bin/zsh} -lic 'bun run ./scripts/cli.ts test web-demo'"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",

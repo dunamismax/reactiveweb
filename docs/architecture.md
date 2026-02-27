@@ -44,7 +44,7 @@
 ## web-demo Local Startup
 
 ```bash
-/Users/sawyer/.bun/bin/bun install
+bun install
 docker rm -f reactiveweb-postgres 2>/dev/null || true
 docker run -d \
   --name reactiveweb-postgres \
@@ -60,6 +60,6 @@ export AUTH_MAX_FAILED_SIGNIN_ATTEMPTS="5"
 export AUTH_LOCKOUT_DURATION_MINUTES="15"
 export DEMO_OWNER_USERNAME="owner"
 export NUXT_PUBLIC_DEMO_OWNER_USERNAME="owner"
-/Users/sawyer/.bun/bin/bun run demo:bootstrap
-/Users/sawyer/.bun/bin/bun run dev
+bun run demo:bootstrap
+bun run dev
 ```

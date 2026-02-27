@@ -12,9 +12,9 @@ Reusable Nuxt + Vue starter for new apps in `reactiveweb`.
 ## Commands
 
 ```bash
-/Users/sawyer/.bun/bin/bun run dev
-/Users/sawyer/.bun/bin/bun run build
-/Users/sawyer/.bun/bin/bun run typecheck
+bun run dev
+bun run build
+bun run typecheck
 ```
 
 ## New App Bootstrap
@@ -22,4 +22,4 @@ Reusable Nuxt + Vue starter for new apps in `reactiveweb`.
 1. Copy this directory: `cp -R apps/web-template apps/<new-app-name>`
 2. Rename package metadata in `apps/<new-app-name>/package.json`
 3. Replace `pages/index.vue` with app-specific routes/components
-4. Run from repo root: `/Users/sawyer/.bun/bin/bun run dev:app <new-app-name>`
+4. Run from repo root: `bun run dev:app <new-app-name>`

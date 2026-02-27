@@ -16,11 +16,11 @@ Flagship `reactiveweb` app rewritten to Nuxt + Vue while preserving the existing
 From repository root:
 
 ```bash
-/Users/sawyer/.bun/bin/bun run demo:bootstrap
-/Users/sawyer/.bun/bin/bun run dev
-/Users/sawyer/.bun/bin/bun run test:web-demo
-/Users/sawyer/.bun/bin/bun run build
-/Users/sawyer/.bun/bin/bun run typecheck
+bun run demo:bootstrap
+bun run dev
+bun run test:web-demo
+bun run build
+bun run typecheck
 ```
 
 ## Required Environment
