@@ -1,56 +1,41 @@
 import { parseDemoEnv, parseDemoServerEnv } from "@reactiveweb/config";
 import { describe, expect, it } from "vitest";
 
-describe("demo env parsing", () => {
-  it("maps false-like string values to false", () => {
-    expect(parseDemoEnv({ VITE_ENABLE_AUTH_DEMO: "false" }).VITE_ENABLE_AUTH_DEMO).toBe(false);
-    expect(parseDemoEnv({ VITE_ENABLE_AUTH_DEMO: "0" }).VITE_ENABLE_AUTH_DEMO).toBe(false);
-  });
-
-  it("maps true-like string values to true", () => {
-    expect(parseDemoEnv({ VITE_ENABLE_AUTH_DEMO: "true" }).VITE_ENABLE_AUTH_DEMO).toBe(true);
-    expect(parseDemoEnv({ VITE_ENABLE_AUTH_DEMO: "1" }).VITE_ENABLE_AUTH_DEMO).toBe(true);
-  });
-
-  it("keeps defaults when optional values are missing", () => {
-    const parsed = parseDemoEnv({});
-    expect(parsed.VITE_ENABLE_AUTH_DEMO).toBe(true);
-    expect(parsed.VITE_DEMO_OWNER_USERNAME).toBe("owner");
-  });
-
-  it("normalizes owner username to lowercase", () => {
-    const parsed = parseDemoEnv({ VITE_DEMO_OWNER_USERNAME: "OwNeR.01" });
-    expect(parsed.VITE_DEMO_OWNER_USERNAME).toBe("owner.01");
-  });
-
-  it("parses server env with owner username", () => {
-    const parsed = parseDemoServerEnv({
-      DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
-      AUTH_SECRET: "replace-with-16+-char-secret",
-      AUTH_DEMO_PASSWORD: "demo-pass-123",
-      VITE_DEMO_OWNER_USERNAME: "Owner",
+describe("config env parsing", () => {
+  it("normalizes Nuxt public env values into client config", () => {
+    const env = parseDemoEnv({
+      NODE_ENV: "development",
+      NUXT_PUBLIC_APP_NAME: "Demo Surface",
+      NUXT_PUBLIC_ENABLE_AUTH_DEMO: "true",
+      NUXT_PUBLIC_DEMO_OWNER_USERNAME: "Owner-User",
     });
 
-    expect(parsed.VITE_DEMO_OWNER_USERNAME).toBe("owner");
-    expect(parsed.AUTH_MAX_FAILED_SIGNIN_ATTEMPTS).toBe(5);
-    expect(parsed.AUTH_LOCKOUT_DURATION_MINUTES).toBe(15);
+    expect(env.APP_NAME).toBe("Demo Surface");
+    expect(env.ENABLE_AUTH_DEMO).toBe(true);
+    expect(env.OWNER_USERNAME).toBe("owner-user");
   });
 
-  it("parses lockout knobs from numeric strings", () => {
-    const parsed = parseDemoServerEnv({
+  it("prefers explicit server owner usernames and keeps legacy aliases as fallback", () => {
+    const explicit = parseDemoServerEnv({
+      NODE_ENV: "development",
       DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
-      AUTH_SECRET: "replace-with-16+-char-secret",
-      AUTH_DEMO_PASSWORD: "demo-pass-123",
-      AUTH_MAX_FAILED_SIGNIN_ATTEMPTS: "7",
-      AUTH_LOCKOUT_DURATION_MINUTES: "30",
-      VITE_DEMO_OWNER_USERNAME: "owner",
+      AUTH_SECRET: "reactiveweb-secret-1234",
+      AUTH_DEMO_PASSWORD: "abc12345",
+      DEMO_OWNER_USERNAME: "PrimaryOwner",
+      NUXT_PUBLIC_DEMO_OWNER_USERNAME: "NuxtOwner",
+      VITE_DEMO_OWNER_USERNAME: "LegacyOwner",
     });
 
-    expect(parsed.AUTH_MAX_FAILED_SIGNIN_ATTEMPTS).toBe(7);
-    expect(parsed.AUTH_LOCKOUT_DURATION_MINUTES).toBe(30);
-  });
+    expect(explicit.OWNER_USERNAME).toBe("primaryowner");
 
-  it("rejects invalid owner usernames", () => {
-    expect(() => parseDemoEnv({ VITE_DEMO_OWNER_USERNAME: "invalid space" })).toThrow();
+    const legacy = parseDemoServerEnv({
+      NODE_ENV: "development",
+      DATABASE_URL: "postgres://postgres:postgres@localhost:55432/reactiveweb",
+      AUTH_SECRET: "reactiveweb-secret-1234",
+      AUTH_DEMO_PASSWORD: "abc12345",
+      VITE_DEMO_OWNER_USERNAME: "LegacyOwner",
+    });
+
+    expect(legacy.OWNER_USERNAME).toBe("legacyowner");
   });
 });

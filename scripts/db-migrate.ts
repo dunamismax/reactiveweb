@@ -1,13 +1,10 @@
 import { spawn } from "node:child_process";
+import { resolve } from "node:path";
 
-function runCommand(args: string[]) {
-  const packageManagerExec = process.env.npm_execpath;
-  const runner = packageManagerExec?.includes("pnpm")
-    ? { command: process.execPath, args: [packageManagerExec] }
-    : { command: "corepack", args: ["pnpm"] };
-
+function runCommand(command: string, args: string[], options?: { cwd?: string }) {
   return new Promise<void>((resolve, reject) => {
-    const proc = spawn(runner.command, [...runner.args, ...args], {
+    const proc = spawn(command, args, {
+      cwd: options?.cwd ? resolve(options.cwd) : undefined,
       env: process.env,
       stdio: "inherit",
     });
@@ -29,7 +26,13 @@ function runCommand(args: string[]) {
 }
 
 async function main() {
-  await runCommand(["--filter", "@reactiveweb/db", "run", "db:migrate"]);
+  const dbPackageDir = resolve("packages/db");
+  const drizzleKitBin = resolve(dbPackageDir, "node_modules/drizzle-kit/bin.cjs");
+  const drizzleConfig = resolve(dbPackageDir, "drizzle.config.ts");
+
+  await runCommand("node", [drizzleKitBin, "migrate", "--config", drizzleConfig], {
+    cwd: dbPackageDir,
+  });
 }
 
 main().catch((error) => {

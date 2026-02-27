@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, count, desc, eq, isNull, sql } from "drizzle-orm";
 
-import { db } from "./index.ts";
-import { demoAuditLogs, demoAuthAttempts, demoUsers } from "./schema/index.ts";
+import { db } from "./index";
+import { demoAuditLogs, demoAuthAttempts, demoUsers } from "./schema/index";
 
 const defaultWorkspaceUsers = [
   { name: "Stephen Sawyer", username: "owner", role: "owner", active: true },
@@ -31,7 +31,8 @@ function ensureUniqueUsername(base: string, used: Set<string>) {
 }
 
 export async function ensureDemoWorkspaceSeed(ownerUsername: string, passwordHash: string) {
-  const [{ total }] = await db.select({ total: count() }).from(demoUsers);
+  const [row] = await db.select({ total: count() }).from(demoUsers);
+  const total = row?.total ?? 0;
   if (total > 0) {
     return;
   }
@@ -70,8 +71,8 @@ export async function ensureDemoWorkspaceSeed(ownerUsername: string, passwordHas
 }
 
 export async function getDemoUserCount() {
-  const [{ total }] = await db.select({ total: count() }).from(demoUsers);
-  return total;
+  const [row] = await db.select({ total: count() }).from(demoUsers);
+  return row?.total ?? 0;
 }
 
 export async function listDemoUsers() {

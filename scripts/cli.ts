@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,6 +7,9 @@ import { fileURLToPath } from "node:url";
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = dirname(scriptsDir);
 const appsDir = join(rootDir, "apps");
+const configuredBun =
+  process.env.BUN_BIN ?? (process.env.HOME ? `${process.env.HOME}/.bun/bin/bun` : "bun");
+const bunBin = existsSync(configuredBun) ? configuredBun : "bun";
 
 async function getApps() {
   const entries = await readdir(appsDir, { withFileTypes: true });
@@ -16,13 +20,8 @@ async function getApps() {
 }
 
 function runInApp(app: string, script: string) {
-  const packageManagerExec = process.env.npm_execpath;
-  const runner = packageManagerExec?.includes("pnpm")
-    ? { command: process.execPath, args: [packageManagerExec] }
-    : { command: "corepack", args: ["pnpm"] };
-
   return new Promise<void>((resolve, reject) => {
-    const proc = spawn(runner.command, [...runner.args, "run", script], {
+    const proc = spawn(bunBin, ["run", script], {
       cwd: join(appsDir, app),
       stdio: "inherit",
       env: process.env,
@@ -56,7 +55,7 @@ async function main() {
   }
 
   if (!command) {
-    console.error("Usage: node scripts/cli.ts <dev|build|typecheck|test|list> [app|all]");
+    console.error("Usage: bun run scripts/cli.ts <dev|build|typecheck|test|list> [app|all]");
     process.exit(1);
   }
 

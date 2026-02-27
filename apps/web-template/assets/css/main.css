@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #121220;
+  --surface: #1a1b31;
+  --border: #2a2b48;
+  --text: #e9ebff;
+  --muted: #9ca3bd;
+  --accent: #2ec4b6;
+}
+
+html,
+body,
+#__nuxt {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 20%, #2ec4b624 0%, transparent 30%),
+    radial-gradient(circle at 80% 0%, #6d66ff1f 0%, transparent 36%),
+    linear-gradient(140deg, #121220, #17182f 55%, #121220);
+  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+}

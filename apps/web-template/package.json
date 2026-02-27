@@ -6,30 +6,22 @@
     "node": ">=24.13.1"
   },
   "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
-    "typecheck": "react-router typegen && tsc"
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@react-router/node": "7.12.0",
     "@reactiveweb/config": "workspace:*",
     "@reactiveweb/ui": "workspace:*",
-    "clsx": "^2.1.1",
-    "isbot": "^5.1.31",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-router": "7.12.0",
-    "tailwind-merge": "^3.3.1"
+    "nuxt": "latest",
+    "vue": "latest"
   },
   "devDependencies": {
-    "@react-router/dev": "7.12.0",
-    "@tailwindcss/vite": "^4.1.13",
-    "@types/node": "^24",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.13",
+    "@nuxtjs/tailwindcss": "latest",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2",
-    "vite": "^7.1.7",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vue-tsc": "latest"
   }
 }

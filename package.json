@@ -1,31 +1,33 @@
 {
   "name": "reactiveweb",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "packageManager": "pnpm@10.30.0",
+  "packageManager": "bun@1.3.9",
   "engines": {
     "node": ">=24.13.1"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "node scripts/cli.ts dev web-demo",
-    "dev:template": "node scripts/cli.ts dev web-template",
-    "dev:app": "node scripts/cli.ts dev",
-    "db:migrate": "node scripts/db-migrate.ts",
-    "demo:seed": "node scripts/web-demo-seed.ts",
-    "demo:bootstrap": "node scripts/web-demo-bootstrap.ts",
-    "build": "node scripts/cli.ts build all",
-    "typecheck": "node scripts/cli.ts typecheck all",
+    "dev": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev web-demo",
+    "dev:template": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev web-template",
+    "dev:app": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts dev",
+    "db:migrate": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/db-migrate.ts",
+    "demo:seed": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/web-demo-seed.ts",
+    "demo:bootstrap": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/web-demo-bootstrap.ts",
+    "build": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts build all",
+    "typecheck": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts typecheck all",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "apps:list": "node scripts/cli.ts list",
-    "test:web-demo": "node scripts/cli.ts test web-demo"
+    "apps:list": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts list",
+    "test:web-demo": "${BUN_BIN:-$HOME/.bun/bin/bun} run ./scripts/cli.ts test web-demo"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",
     "@types/node": "^24.5.2",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.2"
   }
 }

@@ -1,30 +1,22 @@
-FROM node:24-alpine AS base
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+FROM oven/bun:1.3.9 AS deps
 WORKDIR /app
-
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json biome.json ./
+COPY package.json tsconfig.base.json biome.json ./
+COPY bun.lock bun.lock
 COPY apps/web-demo/package.json apps/web-demo/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/ui/package.json packages/ui/package.json
-RUN pnpm install --frozen-lockfile
+RUN bun install
 
-FROM base AS build
+FROM oven/bun:1.3.9 AS build
+WORKDIR /app
 COPY --from=deps /app/ /app/
 COPY . .
-RUN pnpm --filter @reactiveweb/web-demo run build
+RUN bun --cwd apps/web-demo run build
 
 FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/web-demo ./apps/web-demo
-COPY --from=build /app/packages/config ./packages/config
-COPY --from=build /app/packages/db ./packages/db
-COPY --from=build /app/packages/ui ./packages/ui
+COPY --from=build /app/apps/web-demo/.output ./.output
 EXPOSE 3000
-CMD ["node", "./apps/web-demo/build/server/index.js"]
+CMD ["node", ".output/server/index.mjs"]

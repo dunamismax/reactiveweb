@@ -1,26 +1,25 @@
 # web-template
 
-Reusable React Router SPA starter for new apps in `reactiveweb`.
+Reusable Nuxt + Vue starter for new apps in `reactiveweb`.
 
-## What this template includes
+## Includes
 
-- React Router framework mode with `ssr: false`
-- React 19 + TypeScript baseline
-- Tailwind CSS setup
-- Shared UI package integration via `@reactiveweb/ui`
-- Starter route structure and starter layout components
+- Nuxt file-router baseline
+- Vue 3 + TypeScript strict mode
+- Tailwind setup with a minimal design system
+- Workspace integration for shared packages
 
 ## Commands
 
 ```bash
-corepack pnpm run dev
-corepack pnpm run build
-corepack pnpm run typecheck
+/Users/sawyer/.bun/bin/bun run dev
+/Users/sawyer/.bun/bin/bun run build
+/Users/sawyer/.bun/bin/bun run typecheck
 ```
 
-## New app bootstrap flow
+## New App Bootstrap
 
 1. Copy this directory: `cp -R apps/web-template apps/<new-app-name>`
-2. Rename the package in `apps/<new-app-name>/package.json`
-3. Update route content and metadata in `app/root.tsx` and `app/routes/home.tsx`
-4. Run from repo root: `corepack pnpm run dev:app <new-app-name>`
+2. Rename package metadata in `apps/<new-app-name>/package.json`
+3. Replace `pages/index.vue` with app-specific routes/components
+4. Run from repo root: `/Users/sawyer/.bun/bin/bun run dev:app <new-app-name>`

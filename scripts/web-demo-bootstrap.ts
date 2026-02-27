@@ -1,13 +1,13 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 
-function runCommand(args: string[]) {
-  const packageManagerExec = process.env.npm_execpath;
-  const runner = packageManagerExec?.includes("pnpm")
-    ? { command: process.execPath, args: [packageManagerExec] }
-    : { command: "corepack", args: ["pnpm"] };
+const configuredBun =
+  process.env.BUN_BIN ?? (process.env.HOME ? `${process.env.HOME}/.bun/bin/bun` : "bun");
+const bunBin = existsSync(configuredBun) ? configuredBun : "bun";
 
+function runBunCommand(args: string[]) {
   return new Promise<void>((resolve, reject) => {
-    const proc = spawn(runner.command, [...runner.args, ...args], {
+    const proc = spawn(bunBin, args, {
       env: process.env,
       stdio: "inherit",
     });
@@ -29,8 +29,8 @@ function runCommand(args: string[]) {
 }
 
 async function main() {
-  await runCommand(["--filter", "@reactiveweb/db", "run", "db:migrate"]);
-  await runCommand(["run", "demo:seed"]);
+  await runBunCommand(["run", "db:migrate"]);
+  await runBunCommand(["run", "demo:seed"]);
 }
 
 main().catch((error) => {
